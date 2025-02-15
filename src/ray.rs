@@ -24,6 +24,10 @@ impl Ray {
         }
     }
 
+    pub fn new_from_to(from: Vec3, to: Vec3) -> Self {
+        Self::new(from, to - from)
+    }
+
     pub fn pos_at_length(&self, l: Length) -> Vec3 {
         self.start + self.direction * l
     }

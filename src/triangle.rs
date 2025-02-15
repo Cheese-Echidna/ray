@@ -1,5 +1,7 @@
+use rand::random;
 use crate::*;
-use crate::utils::bounce_across_normal;
+use crate::object::OBJECT_TOLERANCE;
+use crate::utils::{bounce_across_normal, random_cosine_direction};
 
 #[derive(Debug)]
 pub struct Triangle {
@@ -93,7 +95,7 @@ impl Triangle {
     }
 
     pub fn includes_point(&self, point: Vec3) -> bool {
-        self.get_area_diff_point(point).is_some_and(|x| x < 0.0001)
+        self.get_area_diff_point(point).is_some_and(|x| x < OBJECT_TOLERANCE)
     }
 }
 
@@ -102,19 +104,40 @@ impl RenderObject for Triangle {
         self.moller_trumbore_intersection(ray).into_iter().collect()
     }
 
-    fn scatter(&self, impact: Vec3, direction: Vec3) -> Option<(LinSrgb, Ray)> {
-        let mut normal = self.normal();
-        if normal.dot(direction) < 0.0 {
-            normal *= -1.;
-        }
-
+    fn scatter_ray(&self, impact: Vec3, direction: Vec3) -> Ray {
+        let normal = utils::fix_normal(direction, self.normal());
         let reflect_dir = bounce_across_normal(direction, normal);
-        Some((self.colour, Ray::new(impact, reflect_dir.normalize())))
+        let random_hemi_dir = reflect_dir + self.roughness * random_cosine_direction(normal);
+
+        Ray::new(impact, random_hemi_dir.normalize())
+    }
+
+    fn attenuation_colour(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
+        self.colour
     }
 
     fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
         let closeness = (-direction).normalize().dot(self.normal()).abs() as f32;
         self.colour * self.emissivity * closeness
+    }
+
+    fn random_point_on_surface(&self) -> DVec3 {
+        let [a, b, c] = self.vertices;
+        let ab = b - a;
+        let ac = c - a;
+        let (mut u, mut v):(f64, f64) = (random(), random());
+        if u + v > 1. {
+            (u, v) = (1. - u, 1. - v);
+        }
+
+        let point = a + ab * u + ac * v;
+
+        assert!(self.includes_point_on_surface(point));
+        point
+    }
+
+    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+        self.includes_point(point)
     }
 }
 

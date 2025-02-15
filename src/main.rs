@@ -17,25 +17,25 @@ use winit::event::VirtualKeyCode::B;
 pub use crate::{ray::*, scene::*, camera::*, renderer::render, sphere::*};
 use crate::object::RenderObject;
 use crate::polygon::Polygon;
+use crate::renderer::render2;
 pub(crate) use crate::utils::dprintln;
 pub(crate) use crate::utils::convert;
 
 pub type Length = f64;
 pub type Angle = f64;
 
-const WIDTH:usize = 1000;
-const HEIGHT:usize = 1000;
+const WIDTH:usize = 1200;
+const HEIGHT:usize = 1200;
 const SCALE:usize = 1;
 
 fn main() {
     let scene = coloured_spheres();
-    render(scene);
+    render2(scene).unwrap();
 }
 
 fn coloured_spheres() -> Scene {
     let loc = 4.0 * Vec3::new(1.0,1.0,1.0);
-    let ball_pos = Vec3::new(-3.4322, -2.0, 1.12);
-    let camera = Camera::new(loc, ball_pos);
+    let camera = Camera::new(loc, Vec3::Z);
 
     println!("{:?}", camera);
 
@@ -46,15 +46,15 @@ fn coloured_spheres() -> Scene {
     // Sphere::new(Vec3::new(-1., 2., 1.), 0.5, BLUE.into(), 0.0),
     // Sphere::new(Vec3::ZERO, 20.0, WHITE.into(), 0.01)
 
-    let wall_1 = Polygon::new_square(Vec3::new(0., -5., 0.), Vec3::X, Vec3::Z, 20.0, RED.into(), 0.0, 0.0);
+    // let floor = Polygon::new_square(Vec3::ZERO, Vec3::X, Vec3::Y, 200.0, RED.into(), 0.0, 0.03);
     let shapes = vec![
-        // convert!(Sphere::new(Vec3::ZERO, 2.0, WHITE.into(), 0.0, 0.05)), // Sphere
-        convert!(Sphere::new(ball_pos, 2.0, WHITE.into(), 0.5, 0.0)), // LIGHT
-        // convert!(Sphere::new(Vec3::ZERO, 50.0, WHITE.into(), 0.0, 0.0)), // LIGHT
-        convert!(wall_1),
+        convert!(Sphere::new(Vec3::new(2.0, 4.0, 4.0), 1.0, WHITE.into(), 1.0, 0.03)), // LIGHT
+        convert!(Sphere::new(Vec3::ZERO, 2.0, LinSrgb::new(1.0, 0.4, 0.4), 0.1, 0.0)), // RED
+        convert!(Sphere::new(Vec3::new(2.0, 0.0, 3.0), 1.0, LinSrgb::new(0.4, 1.0, 0.4), 0.1, 0.04)), // GREEN
+        // convert!(floor),
 
     ];
-    let col:LinSrgb<f32> = LinSrgb::new(0.1, 0.1, 0.1);
+    let col:LinSrgb<f32> = BLACK.into();
 
     Scene::new(camera, col, shapes)
 }

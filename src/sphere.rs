@@ -1,3 +1,5 @@
+use std::f64::consts::PI;
+use rand::random;
 use crate::*;
 use crate::utils::{bounce_across_normal, random_cosine_direction};
 
@@ -49,13 +51,17 @@ impl RenderObject for Sphere {
         self.private_intersects(ray).into_iter().map(|x| ray.pos_at_length(x)).collect()
     }
 
-    fn scatter(&self, impact: Vec3, direction: Vec3) -> Option<(LinSrgb, Ray)> {
-        let normal = self.normal_at(impact);
+    fn attenuation_colour(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
+        self.colour
+    }
+
+    fn scatter_ray(&self, impact: Vec3, direction: Vec3) -> Ray {
+        let normal = utils::fix_normal(direction, self.normal_at(impact));
         let reflect_dir = bounce_across_normal(direction, normal);
 
-        // let random_hemi_dir = reflect_dir + self.roughness * random_cosine_direction(normal);
+        let random_hemi_dir = reflect_dir + self.roughness * random_cosine_direction(normal);
 
-        Some((self.colour, Ray::new(impact, reflect_dir.normalize())))
+        Ray::new(impact, random_hemi_dir.normalize())
     }
 
     fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
@@ -63,5 +69,23 @@ impl RenderObject for Sphere {
         // this could cause issues if hitting inside of sphere ^^^
         // OPTIONS: (x*0.5 + 0.5) or x.abs() or x.clamp(0.0, 1.0)
         self.colour * self.emissivity * closeness
+    }
+
+    fn random_point_on_surface(&self) -> DVec3 {
+        // Generate a random direction in a unit sphere, normalize it, scale by radius, offset by center
+        let u:f64 = random();
+        let v:f64 = random();
+        let theta = 2. * PI * u;
+        let phi = (2.0 * v - 1.).acos();
+
+        let dir = Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
+        let point = self.centre + dir * self.radius;
+
+        self.includes_point_on_surface(point);
+        point
+    }
+
+    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+        (self.centre.distance(point) - self.radius).abs() <= object::OBJECT_TOLERANCE
     }
 }

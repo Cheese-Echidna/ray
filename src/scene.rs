@@ -1,6 +1,9 @@
 use crate::object::RenderObject;
 use crate::*;
 use glam::DVec2;
+use rayon::prelude::*;
+
+const DIRECT_LIGHT_FACTOR: f32 = 0.1;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -29,24 +32,46 @@ impl Scene {
         }
 
         // 1. Find closest intersection
-        if let Some((object, impact)) = self.intersect(ray, 0.001) {
+        if let Some((object, impact)) = self.intersect(ray, 0.001, None) {
             // 2. Get emission
             let emitted = object.emission(impact, ray.direction());
 
-            // 3. Attempt to scatter
-            if let Some((attenuation, scattered)) = object.scatter(impact, ray.direction()) {
-                // Recursively gather color from the scattered ray
-                let scattered_color = self.trace(scattered, depth - 1);
-                // Final color = emission + attenuation * color_from_next_bounce
-                emitted + attenuation * scattered_color
-            } else {
-                // If we fail to scatter, it might mean absorption or purely emissive
-                emitted
-            }
+            let num_outgoing_rays = 2;
+
+            let outgoing_rays = (0..num_outgoing_rays).into_iter().map(|x| {
+                object.scatter_ray(impact, ray.direction())
+            }).collect::<Vec<Ray>>();
+
+            // Recursively gather color from the scattered ray(s)
+            let incoming_colour = outgoing_rays.into_par_iter().map(|scattered_ray| {
+                self.trace(scattered_ray, depth - 1)
+            }).collect::<Vec<_>>().into_iter().fold(LinSrgb::new(0.0, 0.0, 0.0), |acc, x| acc + x) / (num_outgoing_rays as f32);
+
+            let attenuation = object.attenuation_colour(impact, ray.direction());
+
+            // Final color = emission + attenuation * color_from_next_bounce
+            emitted + attenuation * incoming_colour
         } else {
             // If it doesn't hit anything, return background
             self.background
         }
+    }
+
+    fn sample_light_contribution(&self, point_to_sample_at: Vec3) -> LinSrgb {
+        self.objects.iter().filter_map(|light_object| {
+            let point_on_light_source = light_object.random_point_on_surface();
+            let ray = Ray::new_from_to(point_to_sample_at, point_on_light_source);
+            match self.intersect(ray, 0.0001, Some(point_to_sample_at.distance(point_on_light_source) - 0.0001)) {
+                None => {
+                    // no intersections between point on surface and point of light
+                    Some(light_object.emission(point_on_light_source, ray.direction()))
+                }
+                Some((new_object, new_intersect)) => {
+                    // Something between the two points, therefore shadow
+                    Some(new_object.emission(new_intersect, ray.direction()))
+                }
+            }
+        }).fold(BLACK.into(), |acc, x| acc + x)
     }
 
     fn get_outgoing_ray(&self, image_prop: DVec2) -> Ray {
@@ -74,6 +99,7 @@ impl Scene {
         &'a self,
         ray: Ray,
         min_distance: f64,
+        max_distance: Option<f64>,
     ) -> Option<(&'a Box<dyn RenderObject>, Vec3)> {
         self.objects
             .iter()
@@ -86,6 +112,10 @@ impl Scene {
             })
             .map(|(object, intersection)| (object, intersection, intersection.distance(ray.start)))
             .filter(|(_, _, dist)| *dist >= min_distance)
+            .filter(|(_, _, dist)| match max_distance {
+                None => { true }
+                Some(max_distance) => { *dist <= max_distance }
+            })
             .filter(|(_, _, dist)| dist.is_finite())
             .min_by(|(_, _, x_dist), (_, _, y_dist)| x_dist.total_cmp(y_dist))
             .map(|(a, b, c)| (a, b))

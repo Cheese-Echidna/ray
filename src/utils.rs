@@ -13,8 +13,6 @@ pub(crate) use dprintln;
 use std::f64::consts::PI;
 use rand::random;
 
-use crate::polygon::Polygon;
-use crate::triangle::Triangle;
 use crate::Vec3;
 
 pub fn vec_format(v: Vec3) -> String {
@@ -71,4 +69,12 @@ pub(crate) fn build_orthonormal_basis(n: Vec3) -> (Vec3, Vec3, Vec3) {
 fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
     let [x, y, z] = local.to_array();
     x * (u) + y * (v) + z * (w)
+}
+
+pub(crate) fn fix_normal(direction: Vec3, normal: Vec3) -> Vec3 {
+    normal * if normal.dot(direction) < 0.0 {
+        -1.0
+    } else {
+        1.0
+    }
 }

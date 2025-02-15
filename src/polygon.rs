@@ -1,3 +1,4 @@
+use rand::Rng;
 use crate::triangle::Triangle;
 use crate::*;
 
@@ -78,12 +79,20 @@ impl RenderObject for Polygon {
             .collect()
     }
 
-    fn scatter(&self, impact: Vec3, direction: Vec3) -> Option<(LinSrgb, Ray)> {
+    fn attenuation_colour(&self, impact: DVec3, direction: DVec3) -> LinSrgb {
         self.triangles
             .iter()
             .find(|x| x.includes_point(impact))
-            .map(|x| x.scatter(impact, direction))
-            .flatten()
+            .unwrap()
+            .attenuation_colour(impact, direction)
+    }
+
+    fn scatter_ray(&self, impact: DVec3, direction: DVec3) -> Ray {
+        self.triangles
+            .iter()
+            .find(|x| x.includes_point(impact))
+            .unwrap()
+            .scatter_ray(impact, direction)
     }
 
     fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
@@ -94,4 +103,17 @@ impl RenderObject for Polygon {
             .emission(impact, direction)
         // unwrap is scary but should never fail because intersects is already true
     }
+
+    fn random_point_on_surface(&self) -> DVec3 {
+        let mut rng = rand::thread_rng();
+        let i = rng.gen_range(0..self.triangles.len());
+        let point = self.triangles[i].random_point_on_surface();
+        assert!(self.triangles[i].includes_point_on_surface(point));
+        point
+    }
+
+    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+        self.triangles.iter().any(|x| x.includes_point(point))
+    }
+
 }
