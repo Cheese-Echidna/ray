@@ -1,7 +1,7 @@
-use rand::random;
-use crate::*;
 use crate::object::OBJECT_TOLERANCE;
 use crate::utils::{bounce_across_normal, random_cosine_direction};
+use crate::*;
+use rand::random;
 
 #[derive(Debug)]
 pub struct Triangle {
@@ -30,7 +30,7 @@ impl Triangle {
     }
 
     // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-    fn moller_trumbore_intersection (&self, ray: Ray) -> Option<Vec3> {
+    fn moller_trumbore_intersection(&self, ray: Ray) -> Option<Vec3> {
         let (origin, direction) = (ray.start, ray.direction());
         let [tri_a, tri_b, tri_c] = self.vertices;
         let e1 = tri_b - tri_a;
@@ -58,12 +58,13 @@ impl Triangle {
         // At this stage we can compute t to find out where the intersection point is on the line.
         let t = inv_det * e2.dot(s_cross_e1);
 
-        if t > f64::EPSILON { // ray intersection
+        if t > f64::EPSILON {
+            // ray intersection
             let intersection_point = origin + direction * t;
             assert!(self.includes_point(intersection_point));
             return Some(intersection_point);
-        }
-        else { // This means that there is a line intersection but not a ray intersection.
+        } else {
+            // This means that there is a line intersection but not a ray intersection.
             return None;
         }
     }
@@ -95,7 +96,8 @@ impl Triangle {
     }
 
     pub fn includes_point(&self, point: Vec3) -> bool {
-        self.get_area_diff_point(point).is_some_and(|x| x < OBJECT_TOLERANCE)
+        self.get_area_diff_point(point)
+            .is_some_and(|x| x < OBJECT_TOLERANCE)
     }
 }
 
@@ -125,7 +127,7 @@ impl RenderObject for Triangle {
         let [a, b, c] = self.vertices;
         let ab = b - a;
         let ac = c - a;
-        let (mut u, mut v):(f64, f64) = (random(), random());
+        let (mut u, mut v): (f64, f64) = (random(), random());
         if u + v > 1. {
             (u, v) = (1. - u, 1. - v);
         }
@@ -140,7 +142,6 @@ impl RenderObject for Triangle {
         self.includes_point(point)
     }
 }
-
 
 #[cfg(test)]
 mod tests {

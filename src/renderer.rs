@@ -1,10 +1,10 @@
-use std::f64::consts::TAU;
 use crate::*;
+use std::f64::consts::TAU;
 
 use pixels::{Error, Pixels, SurfaceTexture};
 use winit::dpi::{LogicalSize, PhysicalSize};
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode};
 use winit::event::WindowEvent;
+use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
 
@@ -39,17 +39,20 @@ pub fn render(mut scene: Scene) {
         *control_flow = ControlFlow::Poll; // Use Poll to continuously redraw; or Wait if you prefer.
 
         match event {
-            Event::WindowEvent { window_id: _window_id, event } => match event {
+            Event::WindowEvent {
+                window_id: _window_id,
+                event,
+            } => match event {
                 WindowEvent::CloseRequested => {
                     *control_flow = ControlFlow::Exit;
                 }
                 WindowEvent::KeyboardInput {
                     input:
-                    KeyboardInput {
-                        virtual_keycode: Some(VirtualKeyCode::Escape),
-                        state: ElementState::Pressed,
-                        ..
-                    },
+                        KeyboardInput {
+                            virtual_keycode: Some(VirtualKeyCode::Escape),
+                            state: ElementState::Pressed,
+                            ..
+                        },
                     ..
                 } => {
                     // Exit when the user presses Escape.
@@ -75,7 +78,6 @@ pub fn render(mut scene: Scene) {
             _ => {}
         }
     });
-
 }
 
 fn draw(scene: &Scene, frame: &mut [u8]) {
@@ -85,8 +87,10 @@ fn draw(scene: &Scene, frame: &mut [u8]) {
         let x = px / SCALE;
         let y = py / SCALE;
 
-        let pos = Vec2::new(x as f64 / (WIDTH / SCALE) as f64 - 0.5, 0.5 - y as f64 / (HEIGHT / SCALE) as f64);
-
+        let pos = Vec2::new(
+            x as f64 / (WIDTH / SCALE) as f64 - 0.5,
+            0.5 - y as f64 / (HEIGHT / SCALE) as f64,
+        );
 
         // LinSrgb<f32> -> Srgb<f32> -> Srgb<u8> -> (u8, u8, u8)
         let (r, g, b) = {
@@ -112,7 +116,7 @@ fn draw(scene: &Scene, frame: &mut [u8]) {
 use image;
 use image::ImageResult;
 
-pub fn render2(scene:Scene) -> ImageResult<()> {
+pub fn render2(scene: Scene) -> ImageResult<()> {
     let (width, height) = (WIDTH as u32, HEIGHT as u32);
     let mut image = image::RgbImage::new(width, height);
     let scale = SCALE as u32;
@@ -121,7 +125,10 @@ pub fn render2(scene:Scene) -> ImageResult<()> {
         for py in 0..height {
             let y = py / scale;
 
-            let pos = Vec2::new(x as f64 / (WIDTH / SCALE) as f64 - 0.5, 0.5 - y as f64 / (HEIGHT / SCALE) as f64);
+            let pos = Vec2::new(
+                x as f64 / (WIDTH / SCALE) as f64 - 0.5,
+                0.5 - y as f64 / (HEIGHT / SCALE) as f64,
+            );
 
             let (r, g, b) = {
                 let x: LinSrgb<f32> = scene.trace_from_image_prop(pos);

@@ -1,7 +1,7 @@
-use std::f64::consts::PI;
-use rand::random;
-use crate::*;
 use crate::utils::{bounce_across_normal, random_cosine_direction};
+use crate::*;
+use rand::random;
+use std::f64::consts::PI;
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -13,8 +13,20 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(centre: Vec3, radius: Length, colour: LinSrgb, emissivity: f32, roughness: f64) -> Sphere {
-        Sphere {centre, radius, colour, emissivity, roughness }
+    pub fn new(
+        centre: Vec3,
+        radius: Length,
+        colour: LinSrgb,
+        emissivity: f32,
+        roughness: f64,
+    ) -> Sphere {
+        Sphere {
+            centre,
+            radius,
+            colour,
+            emissivity,
+            roughness,
+        }
     }
 
     fn private_intersects(&self, ray: Ray) -> Vec<Length> {
@@ -48,7 +60,10 @@ impl Sphere {
 
 impl RenderObject for Sphere {
     fn intersects(&self, ray: Ray) -> Vec<Vec3> {
-        self.private_intersects(ray).into_iter().map(|x| ray.pos_at_length(x)).collect()
+        self.private_intersects(ray)
+            .into_iter()
+            .map(|x| ray.pos_at_length(x))
+            .collect()
     }
 
     fn attenuation_colour(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
@@ -73,12 +88,13 @@ impl RenderObject for Sphere {
 
     fn random_point_on_surface(&self) -> DVec3 {
         // Generate a random direction in a unit sphere, normalize it, scale by radius, offset by center
-        let u:f64 = random();
-        let v:f64 = random();
+        let u: f64 = random();
+        let v: f64 = random();
         let theta = 2. * PI * u;
         let phi = (2.0 * v - 1.).acos();
 
-        let dir = Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
+        let dir =
+            Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
         let point = self.centre + dir * self.radius;
 
         self.includes_point_on_surface(point);

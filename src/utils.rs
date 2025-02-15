@@ -1,24 +1,24 @@
-
 macro_rules! dprintln {
     ($($arg:tt)*) => {if ::std::cfg!(debug_assertions) {::std::println!($($arg)*);}};
 }
 
 macro_rules! convert {
-    ($value:expr) => {Box::new($value) as Box<dyn RenderObject>};
+    ($value:expr) => {
+        Box::new($value) as Box<dyn RenderObject>
+    };
 }
 
 pub(crate) use convert;
 pub(crate) use dprintln;
 
-use std::f64::consts::PI;
 use rand::random;
+use std::f64::consts::PI;
 
 use crate::Vec3;
 
 pub fn vec_format(v: Vec3) -> String {
     format!("({:.4}, {:.4}, {:.4})", v.x, v.y, v.z)
 }
-
 
 pub fn bounce_across_normal(incoming: Vec3, normal: Vec3) -> Vec3 {
     let incoming = incoming.normalize();
@@ -72,9 +72,10 @@ fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
 }
 
 pub(crate) fn fix_normal(direction: Vec3, normal: Vec3) -> Vec3 {
-    normal * if normal.dot(direction) < 0.0 {
-        -1.0
-    } else {
-        1.0
-    }
+    normal
+        * if normal.dot(direction) < 0.0 {
+            -1.0
+        } else {
+            1.0
+        }
 }

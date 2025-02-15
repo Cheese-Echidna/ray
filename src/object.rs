@@ -1,7 +1,7 @@
+use crate::*;
+use rand::random;
 use std::f64::consts::PI;
 use std::fmt::Debug;
-use rand::random;
-use crate::*;
 
 pub(crate) const OBJECT_TOLERANCE: f64 = 0.0001;
 

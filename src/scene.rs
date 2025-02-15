@@ -23,7 +23,7 @@ impl Scene {
 
     pub fn trace_from_image_prop(&self, image_prop: Vec2) -> LinSrgb {
         let ray = self.get_outgoing_ray(image_prop);
-        self.trace(ray, 10)
+        self.trace(ray, 20)
     }
 
     fn trace(&self, ray: Ray, depth: u32) -> LinSrgb {
@@ -36,16 +36,21 @@ impl Scene {
             // 2. Get emission
             let emitted = object.emission(impact, ray.direction());
 
-            let num_outgoing_rays = 2;
+            let num_outgoing_rays = 1;
 
-            let outgoing_rays = (0..num_outgoing_rays).into_iter().map(|x| {
-                object.scatter_ray(impact, ray.direction())
-            }).collect::<Vec<Ray>>();
+            let outgoing_rays = (0..num_outgoing_rays)
+                .into_iter()
+                .map(|x| object.scatter_ray(impact, ray.direction()))
+                .collect::<Vec<Ray>>();
 
             // Recursively gather color from the scattered ray(s)
-            let incoming_colour = outgoing_rays.into_par_iter().map(|scattered_ray| {
-                self.trace(scattered_ray, depth - 1)
-            }).collect::<Vec<_>>().into_iter().fold(LinSrgb::new(0.0, 0.0, 0.0), |acc, x| acc + x) / (num_outgoing_rays as f32);
+            let incoming_colour = outgoing_rays
+                .into_par_iter()
+                .map(|scattered_ray| self.trace(scattered_ray, depth - 1))
+                .collect::<Vec<_>>()
+                .into_iter()
+                .fold(LinSrgb::new(0.0, 0.0, 0.0), |acc, x| acc + x)
+                / (num_outgoing_rays as f32);
 
             let attenuation = object.attenuation_colour(impact, ray.direction());
 
@@ -58,20 +63,27 @@ impl Scene {
     }
 
     fn sample_light_contribution(&self, point_to_sample_at: Vec3) -> LinSrgb {
-        self.objects.iter().filter_map(|light_object| {
-            let point_on_light_source = light_object.random_point_on_surface();
-            let ray = Ray::new_from_to(point_to_sample_at, point_on_light_source);
-            match self.intersect(ray, 0.0001, Some(point_to_sample_at.distance(point_on_light_source) - 0.0001)) {
-                None => {
-                    // no intersections between point on surface and point of light
-                    Some(light_object.emission(point_on_light_source, ray.direction()))
+        self.objects
+            .iter()
+            .filter_map(|light_object| {
+                let point_on_light_source = light_object.random_point_on_surface();
+                let ray = Ray::new_from_to(point_to_sample_at, point_on_light_source);
+                match self.intersect(
+                    ray,
+                    0.0001,
+                    Some(point_to_sample_at.distance(point_on_light_source) - 0.0001),
+                ) {
+                    None => {
+                        // no intersections between point on surface and point of light
+                        Some(light_object.emission(point_on_light_source, ray.direction()))
+                    }
+                    Some((new_object, new_intersect)) => {
+                        // Something between the two points, therefore shadow
+                        Some(new_object.emission(new_intersect, ray.direction()))
+                    }
                 }
-                Some((new_object, new_intersect)) => {
-                    // Something between the two points, therefore shadow
-                    Some(new_object.emission(new_intersect, ray.direction()))
-                }
-            }
-        }).fold(BLACK.into(), |acc, x| acc + x)
+            })
+            .fold(BLACK.into(), |acc, x| acc + x)
     }
 
     fn get_outgoing_ray(&self, image_prop: DVec2) -> Ray {
@@ -113,12 +125,11 @@ impl Scene {
             .map(|(object, intersection)| (object, intersection, intersection.distance(ray.start)))
             .filter(|(_, _, dist)| *dist >= min_distance)
             .filter(|(_, _, dist)| match max_distance {
-                None => { true }
-                Some(max_distance) => { *dist <= max_distance }
+                None => true,
+                Some(max_distance) => *dist <= max_distance,
             })
             .filter(|(_, _, dist)| dist.is_finite())
             .min_by(|(_, _, x_dist), (_, _, y_dist)| x_dist.total_cmp(y_dist))
             .map(|(a, b, c)| (a, b))
     }
 }
-

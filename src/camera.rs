@@ -13,7 +13,9 @@ impl Camera {
     const WORLD_UP: Vec3 = Vec3::Z;
     const FOV: f64 = 75.;
     pub(crate) fn right(&self) -> Vec3 {
-        self.looking_dir.normalize().cross(self.world_up.normalize())
+        self.looking_dir
+            .normalize()
+            .cross(self.world_up.normalize())
     }
 
     pub fn up(&self) -> Vec3 {

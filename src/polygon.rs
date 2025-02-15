@@ -1,6 +1,6 @@
-use rand::Rng;
 use crate::triangle::Triangle;
 use crate::*;
+use rand::Rng;
 
 #[derive(Debug)]
 pub struct Polygon {
@@ -57,7 +57,8 @@ impl Polygon {
         emissivity: f32,
         roughness: f64,
     ) -> Polygon {
-        let corners = [(-1., 1.), (-1., -1.), (1., -1.), (1., 1.)].iter()
+        let corners = [(-1., 1.), (-1., -1.), (1., -1.), (1., 1.)]
+            .iter()
             .map(|(a, b)| width * (along_plane_1 * a + along_plane_2 * b) + center)
             .collect();
         Self::new_from_vertices_and_indies(
@@ -115,5 +116,4 @@ impl RenderObject for Polygon {
     fn includes_point_on_surface(&self, point: DVec3) -> bool {
         self.triangles.iter().any(|x| x.includes_point(point))
     }
-
 }
