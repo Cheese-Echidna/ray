@@ -1,30 +1,128 @@
-use crate::Vec3;
+use image::Rgb32FImage;
+use crate::{Vec3, Vec3Colour};
 use palette::named::{BLACK, WHITE};
 use crate::utils::ColourChange;
 
-#[derive(Debug, Copy, Clone)]
+// enum Texture {
+//     Solid(Vec3),
+//     Image(Rgb32FImage)
+// }
+
+
+
+#[derive(Debug, Clone)]
 pub struct RenderMaterial {
-    pub albedo: Vec3,
-    pub emissivity: Vec3,
-    pub roughness: f32,
-    pub reflectivity: f32,
+    pub base_colour: Vec3,         // "Diffuse" or "albedo" color
+    pub emission_colour: Vec3,     // Emissive color (light emission)
+    pub index_of_refraction: f32,  // For refraction calculations (Snell's law)
+    pub transmission: f32,         // 0 = opaque, 1 = fully transmissive
+    pub roughness: f32,            // 0 = perfect mirror, 1 = very rough
+    pub metallic: f32,             // 0 = dielectric, 1 = fully metallic
 }
 
 impl RenderMaterial {
-    pub(crate) fn new(albedo: Vec3, emissivity: Vec3, roughness: f32, reflectivity: f32) -> RenderMaterial {
+    pub(crate) fn new(base_colour: Vec3, emission_colour: Vec3, index_of_refraction: f32, transmission: f32, roughness: f32, metallic: f32) -> RenderMaterial {
         Self {
-            albedo,
-            emissivity,
+            base_colour,
+            emission_colour,
+            index_of_refraction,
+            transmission,
             roughness,
-            reflectivity,
+            metallic,
         }
     }
 
-    pub(crate) fn new_void() -> Self {
-        Self::new(BLACK.to_vec3(), BLACK.to_vec3(), 0.0, 0.0)
+    pub fn light_source(colour: Vec3Colour) -> Self {
+        Self {
+            base_colour: colour,
+            emission_colour: colour,
+            index_of_refraction: 0.0,
+            transmission: 0.0,
+            roughness: 0.0,
+            metallic: 0.0,
+        }
     }
 
-    pub(crate) fn new_sun() -> Self {
-        Self::new(WHITE.to_vec3(), WHITE.to_vec3(), 0.0, 0.0)
+    /// Perfect vacuum or air approximation
+    pub const AIR: Self = Self {
+        base_colour: Vec3::new(1.0, 1.0, 1.0),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 1.0,
+        transmission: 1.0,
+        roughness: 0.0,
+        metallic: 0.0,
+    };
+
+    /// Water approximation
+    pub const WATER: Self = Self {
+        base_colour: Vec3::new(0.0, 0.05, 0.2),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 1.333,
+        transmission: 1.0,
+        roughness: 0.0,
+        metallic: 0.0,
+    };
+
+    /// Glass approximation
+    pub const GLASS: Self = Self {
+        base_colour: Vec3::new(1.0, 1.0, 1.0),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 1.5,
+        transmission: 1.0,
+        roughness: 0.0,
+        metallic: 0.0,
+    };
+
+    /// Diamond approximation
+    pub const DIAMOND: Self = Self {
+        base_colour: Vec3::new(1.0, 1.0, 1.0),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 2.417,
+        transmission: 1.0,
+        roughness: 0.0,
+        metallic: 0.0,
+    };
+
+    /// Idealised mirror (perfectly reflective metal)
+    pub const MIRROR: Self = Self {
+        base_colour: Vec3::new(1.0, 1.0, 1.0),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 0.0, // Not used here
+        transmission: 0.0,
+        roughness: 0.0,
+        metallic: 1.0,
+    };
+
+    /// Approximate gold color
+    pub const GOLD: Self = Self {
+        base_colour: Vec3::new(1.0, 0.84, 0.0),
+        emission_colour: Vec3::new(0.0, 0.0, 0.0),
+        index_of_refraction: 0.0, // Not used here
+        transmission: 0.0,
+        roughness: 0.0,
+        metallic: 1.0,
+    };
+
+    /// A simple emissive material (blue glow)
+    pub const EMISSIVE_BLUE: Self = Self {
+        base_colour: Vec3::new(0.0, 0.0, 0.0),
+        emission_colour: Vec3::new(0.0, 0.0, 1.0),
+        index_of_refraction: 0.0, // Not used here
+        transmission: 0.0,
+        roughness: 0.0,
+        metallic: 0.0,
+    };
+
+    /// A generic plastic with moderate roughness
+    pub fn plastic(base_colour: Vec3) -> Self {
+        Self {
+            base_colour,
+            emission_colour: Vec3::new(0.0, 0.0, 0.0),
+            index_of_refraction: 1.45,
+            transmission: 0.0,
+            roughness: 0.3,
+            metallic: 0.0,
+        }
     }
+
 }

@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use palette::encoding::Linear;
 use palette::rgb::Rgb;
 use crate::objects::material::RenderMaterial;
-use crate::utils::{bounce_across_normal, random_cosine_direction};
+use crate::utils::{bounce_across_normal, compute_fresnel, random_cosine_direction};
 
 pub(crate) const OBJECT_TOLERANCE: f32 = 0.0001;
 
@@ -27,28 +27,51 @@ pub struct RenderObject {
 }
 
 impl RenderObject {
-    pub fn light_emitted_at_point_in_direction(&self, impact: Vec3, direction: Vec3) -> Vec3 {
-        self.material.emissivity * self.inter_function.ray_normal_closeness(impact, direction) as f32
-    }
-    pub fn is_emitter(&self) -> bool {
-        self.material.emissivity != BLACK.to_vec3()
-    }
-    pub fn emission(&self) -> Vec3 {
-        self.material.emissivity
-    }
-    pub fn colour(&self) -> Vec3 {
-        self.material.albedo
-    }
-    fn scatter_ray(&self, impact: Vec3, direction: Vec3) -> Option<Ray> {
-        if self.material.reflectivity == 0.0 {
-            return None
+    pub fn new(b: Box<dyn RenderIntersection>, m: RenderMaterial) -> Self {
+        Self {
+            inter_function: b,
+            material: m,
         }
+    }
+
+    pub fn is_emitter(&self) -> bool {
+        self.material.emission_colour.length() > 0.0
+    }
+
+    pub fn emission(&self) -> Vec3 {
+        self.material.emission_colour
+    }
+
+    pub fn colour(&self) -> Vec3 {
+        self.material.base_colour
+    }
+    pub fn transmission(&self) -> f32 {
+        self.material.transmission
+    }
+    pub fn metallic(&self) -> f32 {
+        self.material.metallic
+    }
+
+    pub(crate) fn scatter_ray(&self, impact: Vec3, direction: Vec3, ray_ior: f32) -> Ray {
         let normal = utils::fix_normal(direction, self.normal_at(impact));
         let reflect_dir = bounce_across_normal(direction, normal);
 
-        let random_hemi_dir = reflect_dir + self.material.roughness * random_cosine_direction(normal);
+        let random_hemi_dir = reflect_dir + self.material.roughness * random_cosine_direction(normal) * 0.001;
 
-        Some(Ray::new(impact, random_hemi_dir.normalize()))
+        let reflected_ray = Ray::new(impact, random_hemi_dir.normalize(), ray_ior);
+
+        reflected_ray
+    }
+    pub(crate) fn refract_ray(&self, impact: Vec3, direction: Vec3, ray_ior: f32) -> (Option<Ray>, f32) {
+        let normal = self.normal_at(impact);
+        let fresnel = compute_fresnel(direction, normal, ray_ior, self.material.index_of_refraction);
+
+        if self.material.transmission == 0.0 {
+            (None, fresnel)
+        } else {
+            let new_ray_dir = direction.refract(normal, ray_ior / self.material.index_of_refraction);
+            (Some(Ray::new(impact, new_ray_dir, self.material.index_of_refraction)), fresnel)
+        }
     }
 }
 
@@ -70,6 +93,7 @@ impl RenderIntersection for RenderObject {
     }
 
     fn uv(&self, at: Vec3) -> Vec2 {
-        self.inter_function.uv(at)
+        let uv = self.inter_function.uv(at);
+        uv.rem_euclid(Vec2::new(1.0, 1.0)) // todo: Put some sort of scale here
     }
 }

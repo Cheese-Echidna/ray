@@ -1,5 +1,5 @@
 use crate::*;
-
+use rayon::prelude::*;
 use pixels::{Pixels, SurfaceTexture};
 use winit::dpi::{PhysicalSize};
 use winit::event::WindowEvent;
@@ -103,28 +103,33 @@ fn draw(scene: &Scene, frame: &mut [u8]) {
 
 use image;
 use image::ImageResult;
+use rayon::prelude::IntoParallelIterator;
 
 pub fn render2(scene: Scene) -> ImageResult<()> {
     let (width, height) = (WIDTH as u32, HEIGHT as u32);
     let mut image = image::RgbImage::new(width, height);
     let scale = SCALE as u32;
-    for px in 0..width {
-        let x = px / scale;
-        for py in 0..height {
-            let y = py / scale;
 
+    (0..width).into_iter().flat_map(|px| {
+        (0..height).into_iter().map(move |py| {
+            let x = px / scale;
+            let y = py / scale;
             let pos = Vec2::new(
                 x as f32 / (WIDTH / SCALE) as f32 - 0.5,
                 0.5 - y as f32 / (HEIGHT / SCALE) as f32,
             );
+            (px, py, pos)
+        })
+    }).collect::<Vec<_>>().into_par_iter().map(|(px, py, pos)| {
+        let (r, g, b) = {
+            let colour = scene.trace_from_image_prop(pos);
+            <Srgb<u8>>::from_vec3(colour).into_components()
+        };
+        (px, py, [r, g, b])
+    }).collect::<Vec<_>>().into_iter().for_each(|(px, py, colour)| {
+        image.put_pixel(px, py, image::Rgb::from(colour));
 
-            let (r, g, b) = {
-                let colour = scene.trace_from_image_prop(pos);
-                <Srgb<u8>>::from_vec3(colour).into_components()
-            };
+    });
 
-            image.put_pixel(px, py, image::Rgb::from([r, g, b]));
-        }
-    }
     image.save("latest.png")
 }

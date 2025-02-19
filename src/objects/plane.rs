@@ -1,40 +1,38 @@
 use std::fmt::{Debug, Formatter};
-use palette::Vec3;
-use crate::objects::object::RenderObject;
-use crate::{Ray, Vec3};
+use crate::objects::object::{RenderIntersection, RenderObject, OBJECT_TOLERANCE};
+use crate::{Ray, Vec3, Vec2};
 use crate::objects::material::RenderMaterial;
 use crate::objects::object;
+use crate::utils::{build_orthonormal_basis, scalar_projection};
 
 #[derive(Debug)]
 pub struct Plane {
     normal: Vec3,
-    a: Vec3,
-    material: RenderMaterial,
+    centre: Vec3,
 }
 
 impl Plane {
-    pub fn new(normal: Vec3, point: Vec3, material: RenderMaterial) -> Plane {
+    pub fn new(normal: Vec3, centre: Vec3) -> Plane {
         let normal = normal.normalize();
         Self {
             normal,
-            a: point,
-            material,
+            centre,
         }
     }
 }
 
 
-impl RenderObject for Plane {
+impl RenderIntersection for Plane {
     /// Return all intersection points (0 or 1) of the ray with this plane.
     fn intersects(&self, ray: Ray) -> Vec<Vec3> {
         let denom = self.normal.dot(ray.direction());
 
         // If the denominator is near zero, the ray is parallel to the plane
-        if denom.abs() < object::OBJECT_TOLERANCE {
+        if denom.abs() < OBJECT_TOLERANCE {
             return Vec::new();
         }
 
-        let t = (self.a - ray.start()).dot(self.normal) / denom;
+        let t = (self.centre - ray.start()).dot(self.normal) / denom;
 
         // For a typical path tracer, we often only consider intersections "in front of" the ray
         // (i.e., t >= 0). If t < 0, the intersection is behind the ray origin.
@@ -43,11 +41,6 @@ impl RenderObject for Plane {
         } else {
             Vec::new()
         }
-    }
-
-    /// Return the material of this plane (no dependence on impact point here).
-    fn material(&self) -> RenderMaterial {
-        self.material
     }
 
     /// Return the normal at a given impact point on the plane.
@@ -59,13 +52,21 @@ impl RenderObject for Plane {
     /// Generate a random point on the surface of the plane.
     /// For an infinite plane, this is not well-defined. Implementation below is a placeholder.
     fn random_point_on_surface(&self) -> Vec3 {
-        self.a
+        self.centre
         // NOT RANDOM!
     }
 
     /// Check if a given point lies on this plane (within some small epsilon).
     fn includes_point_on_surface(&self, point: Vec3) -> bool {
-        let dist = (point - self.a).dot(self.normal).abs();
-        dist < object::OBJECT_TOLERANCE
+        let dist = (point - self.centre).dot(self.normal).abs();
+        dist < OBJECT_TOLERANCE
+    }
+
+    fn uv(&self, at: Vec3) -> Vec2 {
+        let from_center = at - self.centre;
+        assert!(from_center.dot(self.normal) < OBJECT_TOLERANCE);
+        let (x, y, _n) = build_orthonormal_basis(self.normal);
+        Vec2::new(scalar_projection(from_center, x), scalar_projection(from_center, y))
     }
 }
+

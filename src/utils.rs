@@ -4,7 +4,7 @@ macro_rules! dprintln {
 
 macro_rules! convert {
     ($value:expr) => {
-        Box::new($value) as Box<dyn RenderObject>
+        Box::new($value) as Box<dyn RenderIntersection>
     };
 }
 
@@ -14,6 +14,7 @@ pub(crate) use dprintln;
 use rand::random;
 use std::f32::consts::PI;
 use palette::LinSrgb;
+use crate::objects::object::RenderIntersection;
 use crate::Vec3;
 
 pub fn vec_format(v: Vec3) -> String {
@@ -47,6 +48,21 @@ pub fn random_cosine_direction(normal: Vec3) -> Vec3 {
     local_to_world(hemi, a, b, c)
 }
 
+/// Vector component of u in the direction of v
+pub(crate) fn vector_projection(u: Vec3, v: Vec3) -> Vec3 {
+    u.dot(v) / v.length_squared() * v
+}
+
+/// Vector component of u perpendicular to the direction of v
+pub(crate) fn perpendicular_projection(u: Vec3, v: Vec3) -> Vec3 {
+    u - vector_projection(u, v)
+}
+
+/// Scalar projection of u in the direction of v
+pub(crate) fn scalar_projection(u: Vec3, v: Vec3) -> f32 {
+    u.dot(v) / v.length_squared()
+}
+
 pub(crate) fn build_orthonormal_basis(n: Vec3) -> (Vec3, Vec3, Vec3) {
     // Ensure normal is normalized
     let w = n.normalize();
@@ -65,6 +81,18 @@ pub(crate) fn build_orthonormal_basis(n: Vec3) -> (Vec3, Vec3, Vec3) {
 
     (u, v, w)
 }
+
+/// Ray going from A to B
+pub fn compute_fresnel(ray_dir: Vec3, normal: Vec3, ior1: f32, ior2: f32) -> f32 {
+    let cos_theta = -ray_dir.dot(normal).max(0.0);
+    let f0 = ((ior1 - ior2) / (ior1 + ior2)).powi(2);
+    fresnel_schlick(cos_theta, f0)
+}
+
+fn fresnel_schlick(cos_theta: f32, f0: f32) -> f32 {
+    f0 + (1.0 - f0) * (1.0 - cos_theta).powf(5.0)
+}
+
 
 fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
     let [x, y, z] = local.to_array();
