@@ -1,7 +1,7 @@
-use std::fmt::Debug;
 use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
-use crate::{Ray, Vec3, Vec2};
 use crate::utils::{build_orthonormal_basis, scalar_projection};
+use crate::{Ray, Vec2, Vec3};
+use std::fmt::Debug;
 
 #[derive(Debug)]
 pub struct Plane {
@@ -12,10 +12,7 @@ pub struct Plane {
 impl Plane {
     pub fn new(normal: Vec3, centre: Vec3) -> Plane {
         let normal = normal.normalize();
-        Self {
-            normal,
-            centre,
-        }
+        Self { normal, centre }
     }
 }
 
@@ -46,13 +43,6 @@ impl RenderIntersection for Plane {
         self.normal
     }
 
-    /// Generate a random point on the surface of the plane.
-    /// For an infinite plane, this is not well-defined. Implementation below is a placeholder.
-    fn random_point_on_surface(&self) -> Vec3 {
-        self.centre
-        // NOT RANDOM!
-    }
-
     /// Check if a given point lies on this plane (within some small epsilon).
     fn includes_point_on_surface(&self, point: Vec3) -> bool {
         let dist = (point - self.centre).dot(self.normal).abs();
@@ -63,7 +53,9 @@ impl RenderIntersection for Plane {
         let from_center = at - self.centre;
         assert!(from_center.dot(self.normal) < OBJECT_TOLERANCE);
         let (x, y, _n) = build_orthonormal_basis(self.normal);
-        Vec2::new(scalar_projection(from_center, x), scalar_projection(from_center, y))
+        Vec2::new(
+            scalar_projection(from_center, x),
+            scalar_projection(from_center, y),
+        )
     }
 }
-

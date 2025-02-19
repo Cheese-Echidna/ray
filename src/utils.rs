@@ -1,22 +1,14 @@
+use crate::{Ray, Vec3};
+use glam::Vec2;
+use palette::LinSrgb;
+use rand::random;
+use std::f32::consts::PI;
+
 macro_rules! dprintln {
     ($($arg:tt)*) => {if ::std::cfg!(debug_assertions) {::std::println!($($arg)*);}};
 }
 
-macro_rules! convert {
-    ($value:expr) => {
-        Box::new($value) as Box<dyn RenderIntersection>
-    };
-}
-
-pub(crate) use convert;
 pub(crate) use dprintln;
-
-use rand::random;
-use std::f32::consts::PI;
-use glam::Vec2;
-use palette::LinSrgb;
-use crate::intersections::intersection::RenderIntersection;
-use crate::{Ray, Vec3};
 
 pub fn vec_format(v: Vec3) -> String {
     format!("({:.4}, {:.4}, {:.4})", v.x, v.y, v.z)
@@ -94,19 +86,9 @@ fn fresnel_schlick(cos_theta: f32, f0: f32) -> f32 {
     f0 + (1.0 - f0) * (1.0 - cos_theta).powf(5.0)
 }
 
-
 fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
     let [x, y, z] = local.to_array();
     x * (u) + y * (v) + z * (w)
-}
-
-pub(crate) fn fix_normal(direction: Vec3, normal: Vec3) -> Vec3 {
-    normal
-    * if normal.dot(direction) < 0.0 {
-        -1.0
-    } else {
-        1.0
-    }
 }
 
 pub trait ColourChange {
@@ -138,9 +120,12 @@ impl ColourChange for palette::rgb::Rgb<palette::encoding::Srgb, u8> {
     }
 }
 
-struct Hit {
-    pub ray: Ray,
-    pub impact: Vec3,
-    pub normal: Vec3,
-    // pub uv: Vec2,
+pub fn random_point_on_unit_sphere() -> Vec3 {
+    let u: f32 = random();
+    let v: f32 = random();
+    let theta = 2. * PI * u;
+    let phi = (2.0 * v - 1.).acos();
+
+    let dir = Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
+    dir
 }

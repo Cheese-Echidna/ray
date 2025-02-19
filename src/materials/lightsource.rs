@@ -1,17 +1,25 @@
-use glam::Vec3;
+use crate::hit::Hit;
 use crate::materials::material::RenderMaterial;
 use crate::{Ray, Vec3Colour};
+use crate::intersections::intersection::ray_normal_closeness;
 
-struct LightSource {
-    colour: Vec3Colour
+#[derive(Debug)]
+pub struct LightSource {
+    colour: Vec3Colour,
+}
+
+impl LightSource {
+    pub fn new(colour: Vec3Colour) -> Self {
+        Self { colour }
+    }
 }
 
 impl RenderMaterial for LightSource {
-    fn scatter_ray(&self, ray: Ray, impact: Vec3) -> Option<Ray> {
+    fn scatter_ray(&self, hit: Hit) -> Option<Ray> {
         None
     }
 
-    fn colour_ray(&self, ) -> Option<Vec3Colour> {
+    fn colour(&self, hit: Hit, _future_colour: Vec3Colour) -> Vec3Colour {
         self.colour
     }
 }

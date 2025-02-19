@@ -1,22 +1,25 @@
 mod camera;
+mod hit;
+mod intersections;
+mod materials;
+mod objects;
 mod ray;
 mod renderer;
 mod scene;
 mod utils;
-mod intersections;
-mod materials;
-mod objects;
 
-pub(crate) use crate::utils::convert;
-pub(crate) use crate::utils::dprintln;
-pub use crate::{camera::*, ray::*, renderer::render2, scene::*};
 pub use crate::intersections::*;
+pub(crate) use crate::utils::{dprintln};
+pub use crate::{camera::*, ray::*, renderer::render2, scene::*};
 pub use glam::f32::{Vec2, Vec3};
 use glam::FloatExt;
 pub use palette::{convert::*, named::*, LinSrgb, Srgb};
 
 use crate::intersections::plane::Plane;
 use crate::intersections::sphere::Sphere;
+use crate::materials::diffuse::Diffuse;
+use crate::materials::lightsource::LightSource;
+use crate::objects::RenderObject;
 use crate::utils::{scalar_projection, ColourChange};
 
 pub type Length = f32;
@@ -34,25 +37,39 @@ fn main() {
 // TODO: Refractive materials dont work because we never reset the refractive index.
 
 fn coloured_spheres() -> Scene {
-    let loc = 3.0 * Vec3::new(1.0, 0.0, -0.2);
-    let camera = Camera::new(loc, Vec3::ZERO);
+    let loc = Vec3::new(0.0, 4.0, 0.5);
+    let camera = Camera::new(loc, Vec3::new(0.0, 0.0, 0.3));
 
     println!("{:?}", camera);
 
-    let shapes = vec![
-        // RenderObject::new(convert!(Plane::new(Vec3::Z, Vec3::new(0.0, 0.0, -0.5))), RenderMaterial::plastic(GRAY.to_vec3())),
-        // RenderObject::new(convert!(Sphere::new(Vec3::Z * 0.4, 0.4)), RenderMaterial::MIRROR),
+    let mut objects = vec![
+        RenderObject::new(
+            Plane::new(Vec3::Z, Vec3::new(0.0, 0.0, 0.0)),
+            Diffuse::new(WHITE.to_vec3(), 0.5),
+        ),
         // RenderObject::new(convert!(Sphere::new(Vec3::new(2., -2., 2.), 1.5)), RenderMaterial::light_source(WHITE.to_vec3() * 3.0)),
         // RenderObject::new(convert!(Plane::new(Vec3::X, Vec3::new(-0.5, 0.0, 0.0))), RenderMaterial::plastic(GRAY.to_vec3())),
         // RenderObject::new(convert!(Sphere::new(Vec3::Y * -0.5, 0.4)), RenderMaterial::GOLD),
         // RenderObject::new(convert!(Sphere::new(Vec3::ZERO, 0.4)), RenderMaterial::MIRROR),
     ];
 
+    objects.push(RenderObject::new(
+        Sphere::new(Vec3::new(0.0, 0.0, 1.5), 0.6),
+        LightSource::new(WHITE.to_vec3()),
+    ));
+
+    (0..=4).into_iter().for_each(|x| {
+        let object = RenderObject::new(
+            Sphere::new(Vec3::new(x as f32 - 2.0, 0.0, 0.4), 0.4),
+            Diffuse::new(Vec3::new(0.29, 0.37, 0.5), x as f32 / 4.0),
+        );
+        objects.push(object)
+    });
+
     let col: fn(Vec3, &Camera) -> Vec3Colour = |d, camera| {
-        // let a = 0.5*(scalar_projection(d, camera.up()) + 1.0);
-        // Vec3::new(0.0, 0.0, a)
-        BLACK.to_vec3()
+        let a = camera.up().dot(d);
+        Vec3::new(0.3 * a, 0.4 * a, a)
     };
 
-    Scene::new(camera, col, shapes)
+    Scene::new(camera, col, objects)
 }

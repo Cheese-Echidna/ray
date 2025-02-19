@@ -1,13 +1,13 @@
-use std::fmt::Debug;
-use image::Rgb32FImage;
-use crate::{Ray, Vec3, Vec3Colour};
-use palette::named::{BLACK, WHITE};
+use crate::hit::Hit;
 use crate::utils::ColourChange;
+use crate::{Ray, Vec3, Vec3Colour};
+use image::Rgb32FImage;
+use palette::named::{BLACK, WHITE};
+use std::fmt::Debug;
 
 pub trait RenderMaterial: Debug + Sync {
-    fn scatter_ray(&self, ray: Ray, impact: Vec3) -> Option<Ray>;
-    fn colour_ray(&self, ray: Ray, impact: Vec3) -> Option<Vec3Colour>;
-
+    fn scatter_ray(&self, hit: Hit) -> Option<Ray>;
+    fn colour(&self, hit: Hit, future_colour: Vec3Colour) -> Vec3Colour;
 }
 
 // enum Texture {

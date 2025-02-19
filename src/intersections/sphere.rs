@@ -1,8 +1,8 @@
+use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
 use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
 use std::f32::consts::PI;
-use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
@@ -11,14 +11,8 @@ pub struct Sphere {
 }
 
 impl Sphere {
-    pub fn new(
-        centre: Vec3,
-        radius: Length,
-    ) -> Sphere {
-        Sphere {
-            centre,
-            radius,
-        }
+    pub fn new(centre: Vec3, radius: Length) -> Sphere {
+        Sphere { centre, radius }
     }
 
     fn private_intersects(&self, ray: Ray) -> Vec<Length> {
@@ -55,21 +49,6 @@ impl RenderIntersection for Sphere {
     }
     fn normal_at(&self, point: Vec3) -> Vec3 {
         (point - self.centre).normalize()
-    }
-
-    fn random_point_on_surface(&self) -> Vec3 {
-        // Generate a random direction in a unit sphere, normalize it, scale by radius, offset by center
-        let u: f32 = random();
-        let v: f32 = random();
-        let theta = 2. * PI * u;
-        let phi = (2.0 * v - 1.).acos();
-
-        let dir =
-            Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
-        let point = self.centre + dir * self.radius;
-
-        self.includes_point_on_surface(point);
-        point
     }
 
     fn includes_point_on_surface(&self, point: Vec3) -> bool {

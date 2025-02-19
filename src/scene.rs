@@ -1,7 +1,8 @@
+use crate::hit::Hit;
 use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
-use objects::RenderObject;
 use crate::*;
 use glam::{UVec2, Vec2};
+use objects::RenderObject;
 use rand::random;
 use rayon::prelude::*;
 
@@ -42,8 +43,13 @@ impl Scene {
             return BLACK.to_vec3();
         }
 
-        if let Some((object, impact)) = self.intersect(ray, 0.001, None) {
-            RED.to_vec3()
+        if let Some((object, hit)) = self.intersect(ray, 0.001, None) {
+            let new_colour = object
+                .material
+                .scatter_ray(hit)
+                .map(|new_ray| self.trace(new_ray, depth - 1))
+                .unwrap_or(BLACK.to_vec3());
+            object.material.colour(hit, new_colour)
         } else {
             (self.background)(ray.direction(), &self.camera)
         }
@@ -79,7 +85,7 @@ impl Scene {
         let direction = (self.camera.forward() + right_offset + up_offset).normalize();
 
         // Construct the ray with the camera's location as origin.
-        Ray::new(self.camera.location, direction, 1.0)
+        Ray::new(self.camera.location, direction)
     }
 
     // this shit needs optimising - O(n) for objects is mad slow
@@ -89,11 +95,12 @@ impl Scene {
         ray: Ray,
         min_distance: f32,
         max_distance: Option<f32>,
-    ) -> Option<(&RenderObject, Vec3)> {
+    ) -> Option<(&RenderObject, Hit)> {
         self.objects
             .iter()
             .flat_map(|shape| {
                 shape
+                    .intersector
                     .intersects(ray)
                     .into_iter()
                     .map(|x| (shape, x))
@@ -107,6 +114,15 @@ impl Scene {
             })
             .filter(|(_, _, dist)| dist.is_finite())
             .min_by(|(_, _, x_dist), (_, _, y_dist)| x_dist.total_cmp(y_dist))
-            .map(|(a, b, _)| (a, b))
+            .map(|(a, b, _)| {
+                (
+                    a,
+                    Hit {
+                        ray,
+                        impact: b,
+                        normal: a.intersector.normal_at(b),
+                    },
+                )
+            })
     }
 }

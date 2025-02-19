@@ -1,15 +1,15 @@
-use glam::UVec2;
 use crate::*;
-use rayon::prelude::*;
+use glam::UVec2;
+use image;
+use image::ImageResult;
 use pixels::{Pixels, SurfaceTexture};
-use winit::dpi::{PhysicalSize};
+use rayon::prelude::IntoParallelIterator;
+use rayon::prelude::*;
+use winit::dpi::PhysicalSize;
 use winit::event::WindowEvent;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
 use winit::window::WindowBuilder;
-use image;
-use image::ImageResult;
-use rayon::prelude::IntoParallelIterator;
 
 pub fn render2(scene: Scene) -> ImageResult<()> {
     let (width, height) = (WIDTH as u32, HEIGHT as u32);
@@ -17,20 +17,23 @@ pub fn render2(scene: Scene) -> ImageResult<()> {
     let image_dimensions = UVec2::new(width, height);
     let start = std::time::Instant::now();
 
-    (0..width).into_iter().flat_map(|px| {
-        (0..height).into_iter().map(move |py| {
-            UVec2::new(px, py)
+    (0..width)
+        .into_iter()
+        .flat_map(|px| (0..height).into_iter().map(move |py| UVec2::new(px, py)))
+        .collect::<Vec<_>>()
+        .into_par_iter()
+        .map(|pos| {
+            let (r, g, b) = {
+                let colour = scene.trace_from_image_prop(pos, image_dimensions);
+                <Srgb<u8>>::from_vec3(colour).into_components()
+            };
+            (pos, [r, g, b])
         })
-    }).collect::<Vec<_>>().into_par_iter().map(|pos| {
-        let (r, g, b) = {
-            let colour = scene.trace_from_image_prop(pos, image_dimensions);
-            <Srgb<u8>>::from_vec3(colour).into_components()
-        };
-        (pos, [r, g, b])
-    }).collect::<Vec<_>>().into_iter().for_each(|(pos, colour)| {
-        image.put_pixel(pos.x, pos.y, image::Rgb::from(colour));
-
-    });
+        .collect::<Vec<_>>()
+        .into_iter()
+        .for_each(|(pos, colour)| {
+            image.put_pixel(pos.x, pos.y, image::Rgb::from(colour));
+        });
 
     println!("Elapsed {:.3}s", start.elapsed().as_secs_f64());
 
@@ -129,5 +132,3 @@ pub fn render2(scene: Scene) -> ImageResult<()> {
 //         pixel.copy_from_slice(&[r, g, b, 255]);
 //     }
 // }
-
-
