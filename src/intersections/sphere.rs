@@ -52,7 +52,7 @@ impl RenderIntersection for Sphere {
         (self.centre.distance(point) - self.radius).abs() <= OBJECT_TOLERANCE
     }
 
-    fn uv(&self, at: Vec3) -> Vec2 {
+    fn uv(&self, _at: Vec3) -> Vec2 {
         todo!()
     }
 }

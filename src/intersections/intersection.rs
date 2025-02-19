@@ -22,9 +22,3 @@ pub trait RenderIntersection: Debug + Sync {
     fn uv(&self, at: Vec3) -> Vec2;
 }
 
-pub fn ray_normal_closeness(hit: Hit) -> f32 {
-    (-hit.ray.direction())
-        .normalize()
-        .dot(hit.normal)
-        .abs()
-}

@@ -4,12 +4,13 @@ use crate::Vec3;
 use palette::LinSrgb;
 use rand::random;
 use std::f32::consts::PI;
+use crate::hit::Hit;
 
+#[allow(unused_macros)]
 macro_rules! dprintln {
     ($($arg:tt)*) => {if ::std::cfg!(debug_assertions) {::std::println!($($arg)*);}};
 }
 
-pub(crate) use dprintln;
 
 pub fn vec_format(v: Vec3) -> String {
     format!("({:.4}, {:.4}, {:.4})", v.x, v.y, v.z)
@@ -129,4 +130,11 @@ pub fn random_point_on_unit_sphere() -> Vec3 {
 
     
     Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize()
+}
+
+pub fn ray_normal_closeness(hit: Hit) -> f32 {
+    (-hit.ray.direction())
+        .normalize()
+        .dot(hit.normal)
+        .abs()
 }

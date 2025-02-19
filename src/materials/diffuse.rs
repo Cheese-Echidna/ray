@@ -24,7 +24,7 @@ impl RenderMaterial for Diffuse {
         Some(Ray::new(hit.impact, dir))
     }
 
-    fn colour(&self, hit: Hit, future_colour: Vec3Colour) -> Vec3Colour {
+    fn colour(&self, _hit: Hit, future_colour: Vec3Colour) -> Vec3Colour {
         self.base_colour * future_colour
     }
 }

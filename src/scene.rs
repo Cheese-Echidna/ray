@@ -1,10 +1,8 @@
 use crate::hit::Hit;
-use crate::intersections::intersection::RenderIntersection;
 use crate::*;
 use glam::{UVec2, Vec2};
 use objects::RenderObject;
 use rand::random;
-use rayon::prelude::*;
 
 const TRACES_PER_PIXEL: usize = 10;
 
@@ -30,7 +28,7 @@ impl Scene {
 
     pub fn trace_from_image_prop(&self, image_prop: UVec2, image_dimensions: UVec2) -> Vec3 {
         (0..TRACES_PER_PIXEL)
-            .map(|x| {
+            .map(|_x| {
                 let ray = self.get_outgoing_ray(image_prop, image_dimensions);
                 self.trace(ray, 10)
             })
