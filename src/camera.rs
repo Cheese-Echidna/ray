@@ -5,13 +5,13 @@ pub struct Camera {
     pub(crate) location: Vec3,
     looking_dir: Vec3,
     world_up: Vec3,
-    pub(crate) hoz_fov: f64,
+    pub(crate) hoz_fov: f32,
 }
 
 // + y is up like minecraft
 impl Camera {
     const WORLD_UP: Vec3 = Vec3::Z;
-    const FOV: f64 = 75.;
+    const FOV: f32 = 75.;
     pub(crate) fn right(&self) -> Vec3 {
         self.looking_dir
             .normalize()

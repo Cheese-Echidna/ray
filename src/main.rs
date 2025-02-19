@@ -4,20 +4,20 @@ mod renderer;
 mod scene;
 mod utils;
 mod objects;
-// mod lights;
 
 use crate::renderer::render2;
 pub(crate) use crate::utils::convert;
 pub(crate) use crate::utils::dprintln;
 pub use crate::{camera::*, ray::*, renderer::render, scene::*};
 pub use crate::objects::{sphere::Sphere,object::RenderObject};
-pub use glam::f64::{DVec2 as Vec2, DVec3 as Vec3};
-use glam::DVec3;
+pub use glam::f32::{Vec2, Vec3};
 pub use palette::{convert::*, named::*, LinSrgb, Srgb};
 use crate::objects::material::RenderMaterial;
+use crate::utils::ColourChange;
 
-pub type Length = f64;
-pub type Angle = f64;
+pub type Length = f32;
+pub type Angle = f32;
+pub type Vec3Colour = Vec3;
 
 const WIDTH: usize = 1200;
 const HEIGHT: usize = 1200;
@@ -36,9 +36,8 @@ fn coloured_spheres() -> Scene {
 
     let shapes = vec![];
 
-    let col: fn(DVec3, &Camera) -> LinSrgb = |d, camera| {
-        let into = |x| <palette::rgb::Rgb<palette::encoding::Srgb, u8> as Into<LinSrgb<f32>>>::into(x);
-        into(BLUE) * (d.dot(camera.up()) as f32) + into(WHITE) * 0.2
+    let col: fn(Vec3, &Camera) -> Vec3Colour = |d, camera| {
+        BLUE.to_vec3() * d.dot(camera.up()) + WHITE.to_vec3() * 0.2
     };
 
     Scene::new(camera, col, shapes)

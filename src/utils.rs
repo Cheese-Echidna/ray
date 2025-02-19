@@ -12,8 +12,8 @@ pub(crate) use convert;
 pub(crate) use dprintln;
 
 use rand::random;
-use std::f64::consts::PI;
-
+use std::f32::consts::PI;
+use palette::LinSrgb;
 use crate::Vec3;
 
 pub fn vec_format(v: Vec3) -> String {
@@ -27,8 +27,8 @@ pub fn bounce_across_normal(incoming: Vec3, normal: Vec3) -> Vec3 {
 }
 
 pub fn random_cosine_direction(normal: Vec3) -> Vec3 {
-    let r1: f64 = random(); // in [0, 1)
-    let r2: f64 = random(); // in [0, 1)
+    let r1: f32 = random(); // in [0, 1)
+    let r2: f32 = random(); // in [0, 1)
 
     let phi = 2.0 * PI * r1;
     // r2 is in [0,1], so sqrt(r2) is in [0,1]
@@ -73,9 +73,38 @@ fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
 
 pub(crate) fn fix_normal(direction: Vec3, normal: Vec3) -> Vec3 {
     normal
-        * if normal.dot(direction) < 0.0 {
-            -1.0
-        } else {
-            1.0
-        }
+    * if normal.dot(direction) < 0.0 {
+        -1.0
+    } else {
+        1.0
+    }
+}
+
+pub trait ColourChange {
+    fn to_vec3(self) -> Vec3;
+    fn from_vec3(x: Vec3) -> Self;
+}
+
+impl ColourChange for LinSrgb<f32> {
+    fn to_vec3(self) -> Vec3 {
+        Vec3::new(self.red, self.green, self.blue)
+    }
+
+    fn from_vec3(x: Vec3) -> Self {
+        Self::new(x.x, x.y, x.z)
+    }
+}
+
+impl ColourChange for palette::rgb::Rgb<palette::encoding::Srgb, u8> {
+    fn to_vec3(self) -> Vec3 {
+        let x = <palette::rgb::Rgb<palette::encoding::Srgb, u8> as Into<LinSrgb<f32>>>::into(self);
+        x.to_vec3()
+    }
+
+    fn from_vec3(x: Vec3) -> Self {
+        let x = LinSrgb::from_vec3(x);
+        let y: palette::Srgb<f32> = x.into_encoding();
+        let z: palette::Srgb<u8> = y.into_format();
+        z
+    }
 }

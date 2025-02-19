@@ -1,5 +1,5 @@
 use crate::*;
-use glam::DVec3;
+use glam::Vec3;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Ray {
@@ -8,7 +8,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    pub(crate) fn direction(&self) -> DVec3 {
+    pub(crate) fn direction(&self) -> Vec3 {
         self.direction
     }
     pub(crate) fn start(&self) -> Vec3 {

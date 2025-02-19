@@ -45,7 +45,7 @@ impl Polygon {
         center: Vec3,
         along_plane_1: Vec3,
         along_plane_2: Vec3,
-        width: f64,
+        width: f32,
         material: RenderMaterial,
     ) -> Polygon {
         let corners = [(-1., 1.), (-1., -1.), (1., -1.), (1., 1.)]
@@ -70,7 +70,7 @@ impl RenderObject for Polygon {
         // todo: fix
     }
 
-    fn normal_at(&self, impact: DVec3) -> DVec3 {
+    fn normal_at(&self, impact: Vec3) -> Vec3 {
         self.triangles
             .iter()
             .find(|triangle| triangle.includes_point(impact))
@@ -78,7 +78,7 @@ impl RenderObject for Polygon {
             .normal_at(impact)
     }
 
-    fn random_point_on_surface(&self) -> DVec3 {
+    fn random_point_on_surface(&self) -> Vec3 {
         let mut rng = rand::thread_rng();
         let i = rng.gen_range(0..self.triangles.len());
         let point = self.triangles[i].random_point_on_surface();
@@ -86,7 +86,7 @@ impl RenderObject for Polygon {
         point
     }
 
-    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+    fn includes_point_on_surface(&self, point: Vec3) -> bool {
         self.triangles.iter().any(|x| x.includes_point(point))
     }
 }

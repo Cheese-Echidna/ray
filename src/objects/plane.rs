@@ -1,5 +1,5 @@
 use std::fmt::{Debug, Formatter};
-use palette::LinSrgb;
+use palette::Vec3;
 use crate::objects::object::RenderObject;
 use crate::{Ray, Vec3};
 use crate::objects::material::RenderMaterial;

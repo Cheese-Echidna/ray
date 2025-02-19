@@ -1,8 +1,7 @@
 use crate::*;
-use std::f64::consts::TAU;
 
-use pixels::{Error, Pixels, SurfaceTexture};
-use winit::dpi::{LogicalSize, PhysicalSize};
+use pixels::{Pixels, SurfaceTexture};
+use winit::dpi::{PhysicalSize};
 use winit::event::WindowEvent;
 use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode};
 use winit::event_loop::{ControlFlow, EventLoop};
@@ -28,7 +27,7 @@ pub fn render(mut scene: Scene) {
         Pixels::new(WIDTH as u32, HEIGHT as u32, surface_texture).unwrap()
     };
 
-    // let light_fn = |t: f64| {
+    // let light_fn = |t: f32| {
     //     let num_periods = t / 15.0;
     //     let angle = num_periods * TAU;
     //     let p = Vec3::new(angle.cos(), angle.sin(), 1.) * 5.0;
@@ -88,30 +87,19 @@ fn draw(scene: &Scene, frame: &mut [u8]) {
         let y = py / SCALE;
 
         let pos = Vec2::new(
-            x as f64 / (WIDTH / SCALE) as f64 - 0.5,
-            0.5 - y as f64 / (HEIGHT / SCALE) as f64,
+            x as f32 / (WIDTH / SCALE) as f32 - 0.5,
+            0.5 - y as f32 / (HEIGHT / SCALE) as f32,
         );
 
-        // LinSrgb<f32> -> Srgb<f32> -> Srgb<u8> -> (u8, u8, u8)
         let (r, g, b) = {
-            let x: LinSrgb<f32> = scene.trace_from_image_prop(pos);
-            let y: Srgb<f32> = x.into_encoding();
-            let z: Srgb<u8> = y.into_format();
-            z.into_components()
+            let colour = scene.trace_from_image_prop(pos);
+            <Srgb<u8>>::from_vec3(colour).into_components()
         };
 
         pixel.copy_from_slice(&[r, g, b, 255]);
-        //dprintln!();
     }
-    //dprintln!("Frame")
 }
 
-// let exact = (px % SCALE + py % SCALE) == 0;
-// let flag = (x,y) == (3,5) && exact;
-// if flag {
-//     //dprintln!("Flag hit!")
-// }
-// //dprintln!("Px Pos = ({x}, {y})");
 
 use image;
 use image::ImageResult;
@@ -126,15 +114,13 @@ pub fn render2(scene: Scene) -> ImageResult<()> {
             let y = py / scale;
 
             let pos = Vec2::new(
-                x as f64 / (WIDTH / SCALE) as f64 - 0.5,
-                0.5 - y as f64 / (HEIGHT / SCALE) as f64,
+                x as f32 / (WIDTH / SCALE) as f32 - 0.5,
+                0.5 - y as f32 / (HEIGHT / SCALE) as f32,
             );
 
             let (r, g, b) = {
-                let x: LinSrgb<f32> = scene.trace_from_image_prop(pos);
-                let y: Srgb<f32> = x.into_encoding();
-                let z: Srgb<u8> = y.into_format();
-                z.into_components()
+                let colour = scene.trace_from_image_prop(pos);
+                <Srgb<u8>>::from_vec3(colour).into_components()
             };
 
             image.put_pixel(px, py, image::Rgb::from([r, g, b]));

@@ -1,7 +1,7 @@
 use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
-use std::f64::consts::PI;
+use std::f32::consts::PI;
 use crate::objects::object::{RenderIntersection, OBJECT_TOLERANCE};
 
 #[derive(Debug, Clone)]
@@ -57,10 +57,10 @@ impl RenderIntersection for Sphere {
         (point - self.centre).normalize()
     }
 
-    fn random_point_on_surface(&self) -> DVec3 {
+    fn random_point_on_surface(&self) -> Vec3 {
         // Generate a random direction in a unit sphere, normalize it, scale by radius, offset by center
-        let u: f64 = random();
-        let v: f64 = random();
+        let u: f32 = random();
+        let v: f32 = random();
         let theta = 2. * PI * u;
         let phi = (2.0 * v - 1.).acos();
 
@@ -72,11 +72,11 @@ impl RenderIntersection for Sphere {
         point
     }
 
-    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+    fn includes_point_on_surface(&self, point: Vec3) -> bool {
         (self.centre.distance(point) - self.radius).abs() <= OBJECT_TOLERANCE
     }
 
-    fn uv(&self, at: DVec3) -> Vec2 {
+    fn uv(&self, at: Vec3) -> Vec2 {
         todo!()
     }
 }

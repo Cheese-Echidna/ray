@@ -1,5 +1,5 @@
 use crate::*;
-use glam::DVec2;
+use glam::Vec2;
 use rayon::prelude::*;
 use crate::objects::object::{RenderIntersection, OBJECT_TOLERANCE};
 
@@ -8,12 +8,12 @@ const DIRECT_LIGHT_FACTOR: f32 = 0.1;
 #[derive(Debug)]
 pub struct Scene {
     pub camera: Camera,
-    pub background: fn(direction: Vec3, camera: &Camera) -> LinSrgb,
+    pub background: fn(direction: Vec3, camera: &Camera) -> Vec3,
     pub objects: Vec<RenderObject>,
 }
 
 impl Scene {
-    pub fn new(camera: Camera, background: fn(Vec3, &Camera) -> LinSrgb, objects: Vec<RenderObject>) -> Scene {
+    pub fn new(camera: Camera, background: fn(Vec3, &Camera) -> Vec3, objects: Vec<RenderObject>) -> Scene {
         Scene {
             camera,
             background,
@@ -21,14 +21,14 @@ impl Scene {
         }
     }
 
-    pub fn trace_from_image_prop(&self, image_prop: Vec2) -> LinSrgb {
+    pub fn trace_from_image_prop(&self, image_prop: Vec2) -> Vec3 {
         let ray = self.get_outgoing_ray(image_prop);
         self.trace(ray, 20)
     }
 
-    fn trace(&self, ray: Ray, depth: u32) -> LinSrgb {
+    fn trace(&self, ray: Ray, depth: u32) -> Vec3 {
         if depth == 0 {
-            return BLACK.into();
+            return BLACK.to_vec3();
         }
 
         if let Some((object, impact)) = self.intersect(ray, 0.001, None) {
@@ -39,7 +39,7 @@ impl Scene {
         }
     }
 
-    fn incident_light(&self, point: Vec3) -> LinSrgb {
+    fn incident_light(&self, point: Vec3) -> Vec3 {
         self.objects.iter().filter(|x| x.is_emitter())
             .filter_map(|x| {
                 let random_point = x.random_point_on_surface();
@@ -56,10 +56,10 @@ impl Scene {
                     Some(value(random_point))
                 }
             })
-            .fold(LinSrgb::new(0., 0., 0.), |acc, x| acc + x)
+            .fold(Vec3::new(0., 0., 0.), |acc, x| acc + x)
     }
 
-    fn get_outgoing_ray(&self, image_prop: DVec2) -> Ray {
+    fn get_outgoing_ray(&self, image_prop: Vec2) -> Ray {
         // x and y are camera coords
         // both range from -0.5 to 0.5
         let [x, y] = image_prop.to_array();
@@ -83,8 +83,8 @@ impl Scene {
     pub fn intersect<'a>(
         &'a self,
         ray: Ray,
-        min_distance: f64,
-        max_distance: Option<f64>,
+        min_distance: f32,
+        max_distance: Option<f32>,
     ) -> Option<(&'a RenderObject, Vec3)> {
         self.objects
             .iter()

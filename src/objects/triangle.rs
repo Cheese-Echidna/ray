@@ -36,7 +36,7 @@ impl Triangle {
         let ray_cross_e2 = direction.cross(e2);
         let det = e1.dot(ray_cross_e2);
 
-        if det > -f64::EPSILON && det < f64::EPSILON {
+        if det > -f32::EPSILON && det < f32::EPSILON {
             return None; // This ray is parallel to this triangle.
         }
 
@@ -55,7 +55,7 @@ impl Triangle {
         // At this stage we can compute t to find out where the intersection point is on the line.
         let t = inv_det * e2.dot(s_cross_e1);
 
-        if t > f64::EPSILON {
+        if t > f32::EPSILON {
             // ray intersection
             let intersection_point = origin + direction * t;
             assert!(self.includes_point(intersection_point));
@@ -66,7 +66,7 @@ impl Triangle {
         }
     }
 
-    pub fn get_area_diff_point(&self, point: Vec3) -> Option<f64> {
+    pub fn get_area_diff_point(&self, point: Vec3) -> Option<f32> {
         let [a, b, c] = self.vertices;
         let ab = b - a;
         let ac = c - a;
@@ -107,15 +107,15 @@ impl RenderObject for Triangle {
         self.material
     }
 
-    fn normal_at(&self, impact: DVec3) -> DVec3 {
+    fn normal_at(&self, impact: Vec3) -> Vec3 {
         self.normal()
     }
 
-    fn random_point_on_surface(&self) -> DVec3 {
+    fn random_point_on_surface(&self) -> Vec3 {
         let [a, b, c] = self.vertices;
         let ab = b - a;
         let ac = c - a;
-        let (mut u, mut v): (f64, f64) = (random(), random());
+        let (mut u, mut v): (f32, f32) = (random(), random());
         if u + v > 1. {
             (u, v) = (1. - u, 1. - v);
         }
@@ -126,7 +126,7 @@ impl RenderObject for Triangle {
         point
     }
 
-    fn includes_point_on_surface(&self, point: DVec3) -> bool {
+    fn includes_point_on_surface(&self, point: Vec3) -> bool {
         self.includes_point(point)
     }
 }

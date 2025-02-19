@@ -1,16 +1,17 @@
-use palette::LinSrgb;
+use crate::Vec3;
 use palette::named::{BLACK, WHITE};
+use crate::utils::ColourChange;
 
 #[derive(Debug, Copy, Clone)]
 pub struct RenderMaterial {
-    pub albedo: LinSrgb,
-    pub emissivity: LinSrgb,
-    pub roughness: f64,
-    pub reflectivity: f64,
+    pub albedo: Vec3,
+    pub emissivity: Vec3,
+    pub roughness: f32,
+    pub reflectivity: f32,
 }
 
 impl RenderMaterial {
-    pub(crate) fn new(albedo: LinSrgb, emissivity: LinSrgb, roughness: f64, reflectivity: f64) -> RenderMaterial {
+    pub(crate) fn new(albedo: Vec3, emissivity: Vec3, roughness: f32, reflectivity: f32) -> RenderMaterial {
         Self {
             albedo,
             emissivity,
@@ -20,10 +21,10 @@ impl RenderMaterial {
     }
 
     pub(crate) fn new_void() -> Self {
-        Self::new(BLACK.into(), BLACK.into(), 0.0, 0.0)
+        Self::new(BLACK.to_vec3(), BLACK.to_vec3(), 0.0, 0.0)
     }
 
     pub(crate) fn new_sun() -> Self {
-        Self::new(WHITE.into(), WHITE.into(), 0.0, 0.0)
+        Self::new(WHITE.to_vec3(), WHITE.to_vec3(), 0.0, 0.0)
     }
 }
