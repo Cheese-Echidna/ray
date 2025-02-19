@@ -1,24 +1,21 @@
-use crate::object::OBJECT_TOLERANCE;
+use crate::objects::object::OBJECT_TOLERANCE;
 use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
+use crate::objects::material::RenderMaterial;
 
 #[derive(Debug)]
 pub struct Triangle {
     vertices: [Vec3; 3],
-    colour: LinSrgb,
-    pub emissivity: f32,
-    pub roughness: f64,
+    material: RenderMaterial
 }
 
 impl Triangle {
-    pub fn new(vertices: [Vec3; 3], colour: LinSrgb, emissivity: f32, roughness: f64) -> Self {
+    pub fn new(vertices: [Vec3; 3], material: RenderMaterial) -> Self {
         // Assume triangles are not degenerate, if they are, the normal() method below will panic
         Self {
             vertices,
-            colour,
-            emissivity,
-            roughness,
+            material,
         }
     }
     fn normal(&self) -> Vec3 {
@@ -106,21 +103,12 @@ impl RenderObject for Triangle {
         self.moller_trumbore_intersection(ray).into_iter().collect()
     }
 
-    fn scatter_ray(&self, impact: Vec3, direction: Vec3) -> Ray {
-        let normal = utils::fix_normal(direction, self.normal());
-        let reflect_dir = bounce_across_normal(direction, normal);
-        let random_hemi_dir = reflect_dir + self.roughness * random_cosine_direction(normal);
-
-        Ray::new(impact, random_hemi_dir.normalize())
+    fn material(&self) -> RenderMaterial {
+        self.material
     }
 
-    fn attenuation_colour(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
-        self.colour
-    }
-
-    fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
-        let closeness = (-direction).normalize().dot(self.normal()).abs() as f32;
-        self.colour * self.emissivity * closeness
+    fn normal_at(&self, impact: DVec3) -> DVec3 {
+        self.normal()
     }
 
     fn random_point_on_surface(&self) -> DVec3 {
@@ -153,7 +141,7 @@ mod tests {
         let b = Vec3::new(1.0, 0.0, 0.0);
         let c = Vec3::new(0.0, 1.0, 0.0);
 
-        let triangle = Triangle::new([a, b, c], BLACK.into(), 0.0, 0.0);
+        let triangle = Triangle::new([a, b, c], RenderMaterial::new_void());
 
         // A point clearly inside the triangle
         let p1 = Vec3::new(0.25, 0.25, 0.0);

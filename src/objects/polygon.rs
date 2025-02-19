@@ -1,4 +1,4 @@
-use crate::triangle::Triangle;
+use crate::objects::material::RenderMaterial;
 use crate::*;
 use rand::Rng;
 
@@ -8,15 +8,10 @@ pub struct Polygon {
 }
 
 impl Polygon {
-    pub fn new(
-        triangles: Vec<[Vec3; 3]>,
-        colour: LinSrgb,
-        emissivity: f32,
-        roughness: f64,
-    ) -> Polygon {
+    pub fn new(triangles: Vec<[Vec3; 3]>, material: RenderMaterial) -> Polygon {
         let triangles = triangles
             .into_iter()
-            .map(|tri| Triangle::new(tri, colour, emissivity, roughness))
+            .map(|tri| Triangle::new(tri, material))
             .collect();
         Self { triangles }
     }
@@ -24,15 +19,13 @@ impl Polygon {
     pub fn new_from_vertices_and_indies(
         vertices: Vec<Vec3>,
         indices: Vec<[usize; 3]>,
-        colour: LinSrgb,
-        emissivity: f32,
-        roughness: f64,
+        material: RenderMaterial,
     ) -> Polygon {
         let triangles = indices
             .into_iter()
             .map(|tri_index| {
                 let verts = tri_index.map(|x| vertices[x]);
-                Triangle::new(verts, colour, emissivity, roughness)
+                Triangle::new(verts, material)
             })
             .collect();
         Self { triangles }
@@ -53,21 +46,13 @@ impl Polygon {
         along_plane_1: Vec3,
         along_plane_2: Vec3,
         width: f64,
-        colour: LinSrgb,
-        emissivity: f32,
-        roughness: f64,
+        material: RenderMaterial,
     ) -> Polygon {
         let corners = [(-1., 1.), (-1., -1.), (1., -1.), (1., 1.)]
             .iter()
             .map(|(a, b)| width * (along_plane_1 * a + along_plane_2 * b) + center)
             .collect();
-        Self::new_from_vertices_and_indies(
-            corners,
-            vec![[0, 1, 2], [0, 2, 3]],
-            colour,
-            emissivity,
-            roughness,
-        )
+        Self::new_from_vertices_and_indies(corners, vec![[0, 1, 2], [0, 2, 3]], material)
     }
 }
 
@@ -80,29 +65,17 @@ impl RenderObject for Polygon {
             .collect()
     }
 
-    fn attenuation_colour(&self, impact: DVec3, direction: DVec3) -> LinSrgb {
-        self.triangles
-            .iter()
-            .find(|x| x.includes_point(impact))
-            .unwrap()
-            .attenuation_colour(impact, direction)
+    fn material(&self) -> RenderMaterial {
+        self.triangles[0].material()
+        // todo: fix
     }
 
-    fn scatter_ray(&self, impact: DVec3, direction: DVec3) -> Ray {
+    fn normal_at(&self, impact: DVec3) -> DVec3 {
         self.triangles
             .iter()
-            .find(|x| x.includes_point(impact))
+            .find(|triangle| triangle.includes_point(impact))
             .unwrap()
-            .scatter_ray(impact, direction)
-    }
-
-    fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
-        self.triangles
-            .iter()
-            .find(|x| x.includes_point(impact))
-            .unwrap()
-            .emission(impact, direction)
-        // unwrap is scary but should never fail because intersects is already true
+            .normal_at(impact)
     }
 
     fn random_point_on_surface(&self) -> DVec3 {

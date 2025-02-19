@@ -2,30 +2,22 @@ use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
 use std::f64::consts::PI;
+use crate::objects::object::{RenderIntersection, OBJECT_TOLERANCE};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {
     pub centre: Vec3,
     pub radius: Length,
-    pub colour: LinSrgb,
-    pub emissivity: f32,
-    pub roughness: f64,
 }
 
 impl Sphere {
     pub fn new(
         centre: Vec3,
         radius: Length,
-        colour: LinSrgb,
-        emissivity: f32,
-        roughness: f64,
     ) -> Sphere {
         Sphere {
             centre,
             radius,
-            colour,
-            emissivity,
-            roughness,
         }
     }
 
@@ -44,7 +36,7 @@ impl Sphere {
 
         let intersections = if discriminant < 0.0 {
             vec![]
-        } else if discriminant.abs() <= 0.0001 {
+        } else if discriminant.abs() <= OBJECT_TOLERANCE {
             vec![-b / 2.0]
         } else {
             let root = discriminant.sqrt();
@@ -52,38 +44,17 @@ impl Sphere {
         };
         intersections.into_iter().filter(|x| *x >= 0.0).collect()
     }
-
-    fn normal_at(&self, point: Vec3) -> Vec3 {
-        (point - self.centre).normalize()
-    }
 }
 
-impl RenderObject for Sphere {
+impl RenderIntersection for Sphere {
     fn intersects(&self, ray: Ray) -> Vec<Vec3> {
         self.private_intersects(ray)
             .into_iter()
             .map(|x| ray.pos_at_length(x))
             .collect()
     }
-
-    fn attenuation_colour(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
-        self.colour
-    }
-
-    fn scatter_ray(&self, impact: Vec3, direction: Vec3) -> Ray {
-        let normal = utils::fix_normal(direction, self.normal_at(impact));
-        let reflect_dir = bounce_across_normal(direction, normal);
-
-        let random_hemi_dir = reflect_dir + self.roughness * random_cosine_direction(normal);
-
-        Ray::new(impact, random_hemi_dir.normalize())
-    }
-
-    fn emission(&self, impact: Vec3, direction: Vec3) -> LinSrgb {
-        let closeness = (-direction).normalize().dot(self.normal_at(impact)).abs() as f32;
-        // this could cause issues if hitting inside of sphere ^^^
-        // OPTIONS: (x*0.5 + 0.5) or x.abs() or x.clamp(0.0, 1.0)
-        self.colour * self.emissivity * closeness
+    fn normal_at(&self, point: Vec3) -> Vec3 {
+        (point - self.centre).normalize()
     }
 
     fn random_point_on_surface(&self) -> DVec3 {
@@ -102,6 +73,10 @@ impl RenderObject for Sphere {
     }
 
     fn includes_point_on_surface(&self, point: DVec3) -> bool {
-        (self.centre.distance(point) - self.radius).abs() <= object::OBJECT_TOLERANCE
+        (self.centre.distance(point) - self.radius).abs() <= OBJECT_TOLERANCE
+    }
+
+    fn uv(&self, at: DVec3) -> Vec2 {
+        todo!()
     }
 }
