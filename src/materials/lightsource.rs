@@ -1,7 +1,6 @@
 use crate::hit::Hit;
 use crate::materials::material::RenderMaterial;
 use crate::{Ray, Vec3Colour};
-use crate::intersections::intersection::ray_normal_closeness;
 
 #[derive(Debug)]
 pub struct LightSource {

@@ -1,8 +1,5 @@
 use crate::hit::Hit;
-use crate::utils::ColourChange;
-use crate::{Ray, Vec3, Vec3Colour};
-use image::Rgb32FImage;
-use palette::named::{BLACK, WHITE};
+use crate::{Ray, Vec3Colour};
 use std::fmt::Debug;
 
 pub trait RenderMaterial: Debug + Sync {

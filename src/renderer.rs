@@ -1,15 +1,8 @@
 use crate::*;
 use glam::UVec2;
-use image;
 use image::ImageResult;
-use pixels::{Pixels, SurfaceTexture};
 use rayon::prelude::IntoParallelIterator;
 use rayon::prelude::*;
-use winit::dpi::PhysicalSize;
-use winit::event::WindowEvent;
-use winit::event::{ElementState, Event, KeyboardInput, VirtualKeyCode};
-use winit::event_loop::{ControlFlow, EventLoop};
-use winit::window::WindowBuilder;
 
 pub fn render2(scene: Scene) -> ImageResult<()> {
     let (width, height) = (WIDTH as u32, HEIGHT as u32);
@@ -18,8 +11,7 @@ pub fn render2(scene: Scene) -> ImageResult<()> {
     let start = std::time::Instant::now();
 
     (0..width)
-        .into_iter()
-        .flat_map(|px| (0..height).into_iter().map(move |py| UVec2::new(px, py)))
+        .flat_map(|px| (0..height).map(move |py| UVec2::new(px, py)))
         .collect::<Vec<_>>()
         .into_par_iter()
         .map(|pos| {

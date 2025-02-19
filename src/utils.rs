@@ -1,5 +1,6 @@
-use crate::{Ray, Vec3};
-use glam::Vec2;
+#![allow(dead_code)]
+
+use crate::Vec3;
 use palette::LinSrgb;
 use rand::random;
 use std::f32::consts::PI;
@@ -126,6 +127,6 @@ pub fn random_point_on_unit_sphere() -> Vec3 {
     let theta = 2. * PI * u;
     let phi = (2.0 * v - 1.).acos();
 
-    let dir = Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize();
-    dir
+    
+    Vec3::new(theta.cos() * phi.sin(), theta.sin() * phi.sin(), phi.cos()).normalize()
 }

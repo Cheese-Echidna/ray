@@ -2,8 +2,6 @@ use crate::hit::Hit;
 use crate::materials::material::RenderMaterial;
 use crate::utils::random_point_on_unit_sphere;
 use crate::{Ray, Vec3Colour};
-use glam::Vec3;
-use rand::random;
 
 #[derive(Debug)]
 pub struct Diffuse {

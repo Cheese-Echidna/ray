@@ -1,5 +1,5 @@
 use crate::hit::Hit;
-use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
+use crate::intersections::intersection::RenderIntersection;
 use crate::*;
 use glam::{UVec2, Vec2};
 use objects::RenderObject;

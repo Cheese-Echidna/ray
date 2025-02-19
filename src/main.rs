@@ -8,11 +8,8 @@ mod renderer;
 mod scene;
 mod utils;
 
-pub use crate::intersections::*;
-pub(crate) use crate::utils::{dprintln};
 pub use crate::{camera::*, ray::*, renderer::render2, scene::*};
 pub use glam::f32::{Vec2, Vec3};
-use glam::FloatExt;
 pub use palette::{convert::*, named::*, LinSrgb, Srgb};
 
 use crate::intersections::plane::Plane;
@@ -20,7 +17,7 @@ use crate::intersections::sphere::Sphere;
 use crate::materials::diffuse::Diffuse;
 use crate::materials::lightsource::LightSource;
 use crate::objects::RenderObject;
-use crate::utils::{scalar_projection, ColourChange};
+use crate::utils::ColourChange;
 
 pub type Length = f32;
 pub type Angle = f32;
@@ -58,7 +55,7 @@ fn coloured_spheres() -> Scene {
         LightSource::new(WHITE.to_vec3()),
     ));
 
-    (0..=4).into_iter().for_each(|x| {
+    (0..=4).for_each(|x| {
         let object = RenderObject::new(
             Sphere::new(Vec3::new(x as f32 - 2.0, 0.0, 0.4), 0.4),
             Diffuse::new(Vec3::new(0.29, 0.37, 0.5), x as f32 / 4.0),
