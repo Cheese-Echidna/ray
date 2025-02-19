@@ -1,8 +1,6 @@
-use std::fmt::{Debug, Formatter};
-use crate::objects::object::{RenderIntersection, RenderObject, OBJECT_TOLERANCE};
+use std::fmt::Debug;
+use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
 use crate::{Ray, Vec3, Vec2};
-use crate::objects::material::RenderMaterial;
-use crate::objects::object;
 use crate::utils::{build_orthonormal_basis, scalar_projection};
 
 #[derive(Debug)]
@@ -20,7 +18,6 @@ impl Plane {
         }
     }
 }
-
 
 impl RenderIntersection for Plane {
     /// Return all intersection points (0 or 1) of the ray with this plane.

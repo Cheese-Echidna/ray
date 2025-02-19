@@ -2,7 +2,7 @@ use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
 use std::f32::consts::PI;
-use crate::objects::object::{RenderIntersection, OBJECT_TOLERANCE};
+use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
 
 #[derive(Debug, Clone)]
 pub struct Sphere {

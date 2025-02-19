@@ -13,9 +13,10 @@ pub(crate) use dprintln;
 
 use rand::random;
 use std::f32::consts::PI;
+use glam::Vec2;
 use palette::LinSrgb;
-use crate::objects::object::RenderIntersection;
-use crate::Vec3;
+use crate::intersections::intersection::RenderIntersection;
+use crate::{Ray, Vec3};
 
 pub fn vec_format(v: Vec3) -> String {
     format!("({:.4}, {:.4}, {:.4})", v.x, v.y, v.z)
@@ -135,4 +136,11 @@ impl ColourChange for palette::rgb::Rgb<palette::encoding::Srgb, u8> {
         let z: palette::Srgb<u8> = y.into_format();
         z
     }
+}
+
+struct Hit {
+    pub ray: Ray,
+    pub impact: Vec3,
+    pub normal: Vec3,
+    // pub uv: Vec2,
 }
