@@ -1,5 +1,5 @@
 pub mod diffuse;
 pub mod material;
-// mod metal;
-// mod clear;
+pub mod metal;
+pub mod clear;
 pub mod lightsource;

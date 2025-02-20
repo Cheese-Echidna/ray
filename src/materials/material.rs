@@ -7,6 +7,7 @@ pub trait RenderMaterial: Debug + Sync {
     fn colour(&self, hit: Hit, future_colour: Vec3Colour) -> Vec3Colour;
 }
 
+
 // enum Texture {
 //     Solid(Vec3),
 //     Image(Rgb32FImage)

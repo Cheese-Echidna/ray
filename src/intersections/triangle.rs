@@ -59,10 +59,10 @@ impl Triangle {
             // ray intersection
             let intersection_point = origin + direction * t;
             assert!(self.includes_point(intersection_point));
-            return Some(intersection_point);
+            Some(intersection_point)
         } else {
             // This means that there is a line intersection but not a ray intersection.
-            return None;
+            None
         }
     }
 

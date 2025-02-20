@@ -4,7 +4,8 @@ use glam::{UVec2, Vec2};
 use objects::RenderObject;
 use rand::random;
 
-const TRACES_PER_PIXEL: usize = 10;
+use utils::dprintln;
+use crate::utils::vec_format;
 
 #[derive(Debug)]
 pub struct Scene {
@@ -27,13 +28,14 @@ impl Scene {
     }
 
     pub fn trace_from_image_prop(&self, image_prop: UVec2, image_dimensions: UVec2) -> Vec3 {
-        (0..TRACES_PER_PIXEL)
+        let samples = self.camera.samples_per_pixel;
+        (0..samples)
             .map(|_x| {
                 let ray = self.get_outgoing_ray(image_prop, image_dimensions);
-                self.trace(ray, 10)
+                self.trace(ray, self.camera.max_bounces)
             })
             .sum::<Vec3>()
-            / (TRACES_PER_PIXEL as f32)
+            / (self.camera.samples_per_pixel as f32)
     }
 
     fn trace(&self, ray: Ray, depth: u32) -> Vec3 {
@@ -49,6 +51,48 @@ impl Scene {
                 .unwrap_or(BLACK.to_vec3());
             object.material.colour(hit, new_colour)
         } else {
+            (self.background)(ray.direction(), &self.camera)
+        }
+    }
+
+    fn print_trace(&self, ray: Ray, depth: u32) -> Vec3 {
+        let spaces = self.camera.max_bounces - depth;
+
+        let prefix = if spaces == 0 {
+            "".to_string()
+        } else {
+            "|".to_string() + &"-".repeat(spaces as usize - 1)
+        };
+
+        if depth == 0 {
+            dprintln!("{prefix}Depth = 0: returning black");
+            return BLACK.to_vec3();
+        }
+
+        if let Some((object, hit)) = self.intersect(ray, 0.001, None) {
+            dprintln!("{prefix}Object hit {}", hit);
+            let scatter = object
+                .material
+                .scatter_ray(hit);
+
+            if let Some(new_ray) = scatter {
+                dprintln!("{prefix}New ray scatter in dir: {}", vec_format(new_ray.direction()));
+            } else {
+                dprintln!("{prefix}New ray not scattered");
+            }
+
+            let traced_colour = scatter.map(|new_ray| self.print_trace(new_ray, depth - 1))
+                .unwrap_or(BLACK.to_vec3());
+
+            dprintln!("{prefix}Traced colour = {}", vec_format(traced_colour));
+
+            let colour = object.material.colour(hit, traced_colour);
+
+            dprintln!("{prefix}New colour = {}", vec_format(colour));
+
+            colour
+        } else {
+            dprintln!("{prefix}Nothing hit, returning background in direction {}", vec_format(ray.direction()));
             (self.background)(ray.direction(), &self.camera)
         }
     }
@@ -112,15 +156,6 @@ impl Scene {
             })
             .filter(|(_, _, dist)| dist.is_finite())
             .min_by(|(_, _, x_dist), (_, _, y_dist)| x_dist.total_cmp(y_dist))
-            .map(|(a, b, _)| {
-                (
-                    a,
-                    Hit {
-                        ray,
-                        impact: b,
-                        normal: a.intersector.normal_at(b),
-                    },
-                )
-            })
+            .map(|(a, b, _)| (a, Hit::new(a, b, ray)))
     }
 }

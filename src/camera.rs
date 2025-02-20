@@ -2,16 +2,21 @@ use crate::*;
 
 #[derive(Debug, Clone)]
 pub struct Camera {
-    pub(crate) location: Vec3,
+    pub location: Vec3,
     looking_dir: Vec3,
     world_up: Vec3,
-    pub(crate) hoz_fov: f32,
+    pub hoz_fov: f32,
+    pub max_bounces: u32,
+    pub samples_per_pixel: u32,
 }
 
 // + y is up like minecraft
 impl Camera {
     const WORLD_UP: Vec3 = Vec3::Z;
     const FOV: f32 = 75.;
+    const SAMPLES_PER_PX: u32 = 10;
+    const MAX_BOUNCES: u32 = 10;
+
     pub(crate) fn right(&self) -> Vec3 {
         self.looking_dir
             .normalize()
@@ -26,6 +31,19 @@ impl Camera {
         self.looking_dir
     }
 
+    pub fn new_with_control(location: Vec3, looking_at: Vec3, fov: f32, max_bounces: u32, samples_per_pixel: u32) -> Self {
+        let looking_dir = (looking_at - location).normalize();
+
+        Self {
+            location,
+            looking_dir,
+            world_up: Self::WORLD_UP,
+            hoz_fov: fov,
+            max_bounces,
+            samples_per_pixel,
+        }
+    }
+
     pub fn new(location: Vec3, looking_at: Vec3) -> Camera {
         let looking_dir = (looking_at - location).normalize();
         Camera {
@@ -33,6 +51,8 @@ impl Camera {
             looking_dir,
             world_up: Self::WORLD_UP,
             hoz_fov: Self::FOV,
+            max_bounces: Self::MAX_BOUNCES,
+            samples_per_pixel: Self::SAMPLES_PER_PX,
         }
     }
 
@@ -43,6 +63,8 @@ impl Camera {
             looking_dir,
             world_up: Self::WORLD_UP,
             hoz_fov: Self::FOV,
+            max_bounces: Self::MAX_BOUNCES,
+            samples_per_pixel: Self::SAMPLES_PER_PX,
         }
     }
 }

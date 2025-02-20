@@ -7,10 +7,12 @@ use std::f32::consts::PI;
 use crate::hit::Hit;
 
 #[allow(unused_macros)]
+#[macro_export]
 macro_rules! dprintln {
     ($($arg:tt)*) => {if ::std::cfg!(debug_assertions) {::std::println!($($arg)*);}};
 }
 
+pub use dprintln;
 
 pub fn vec_format(v: Vec3) -> String {
     format!("({:.4}, {:.4}, {:.4})", v.x, v.y, v.z)
@@ -77,6 +79,15 @@ pub(crate) fn build_orthonormal_basis(n: Vec3) -> (Vec3, Vec3, Vec3) {
     (u, v, w)
 }
 
+pub fn reflectance(cos_theta: f32, ri: f32) -> f32 {
+    let r0 = ((1. - ri) / (1. + ri)).powi(2);
+    fresnel_schlick(cos_theta, r0)
+}
+
+fn fresnel_schlick(cos_theta: f32, r0: f32) -> f32 {
+    r0 + (1.0 - r0) * (1.0 - cos_theta).powf(5.0)
+}
+
 /// Ray going from A to B
 pub fn compute_fresnel(ray_dir: Vec3, normal: Vec3, ior1: f32, ior2: f32) -> f32 {
     let cos_theta = -ray_dir.dot(normal).max(0.0);
@@ -84,9 +95,7 @@ pub fn compute_fresnel(ray_dir: Vec3, normal: Vec3, ior1: f32, ior2: f32) -> f32
     fresnel_schlick(cos_theta, f0)
 }
 
-fn fresnel_schlick(cos_theta: f32, f0: f32) -> f32 {
-    f0 + (1.0 - f0) * (1.0 - cos_theta).powf(5.0)
-}
+
 
 fn local_to_world(local: Vec3, u: Vec3, v: Vec3, w: Vec3) -> Vec3 {
     let [x, y, z] = local.to_array();
@@ -137,4 +146,12 @@ pub fn ray_normal_closeness(hit: Hit) -> f32 {
         .normalize()
         .dot(hit.normal)
         .abs()
+}
+
+pub(crate) fn fix_normal(normal: Vec3, direction: Vec3) -> Vec3 {
+    if normal.dot(-direction) < 0.0 {
+        -normal
+    } else {
+        normal
+    }
 }
