@@ -55,51 +55,9 @@ impl Scene {
         }
     }
 
-    fn print_trace(&self, ray: Ray, depth: u32) -> Vec3 {
-        let spaces = self.camera.max_bounces - depth;
-
-        let prefix = if spaces == 0 {
-            "".to_string()
-        } else {
-            "|".to_string() + &"-".repeat(spaces as usize - 1)
-        };
-
-        if depth == 0 {
-            dprintln!("{prefix}Depth = 0: returning black");
-            return BLACK.to_vec3();
-        }
-
-        if let Some((object, hit)) = self.intersect(ray, 0.001, None) {
-            dprintln!("{prefix}Object hit {}", hit);
-            let scatter = object
-                .material
-                .scatter_ray(hit);
-
-            if let Some(new_ray) = scatter {
-                dprintln!("{prefix}New ray scatter in dir: {}", vec_format(new_ray.direction()));
-            } else {
-                dprintln!("{prefix}New ray not scattered");
-            }
-
-            let traced_colour = scatter.map(|new_ray| self.print_trace(new_ray, depth - 1))
-                .unwrap_or(BLACK.to_vec3());
-
-            dprintln!("{prefix}Traced colour = {}", vec_format(traced_colour));
-
-            let colour = object.material.colour(hit, traced_colour);
-
-            dprintln!("{prefix}New colour = {}", vec_format(colour));
-
-            colour
-        } else {
-            dprintln!("{prefix}Nothing hit, returning background in direction {}", vec_format(ray.direction()));
-            (self.background)(ray.direction(), &self.camera)
-        }
-    }
-
     fn get_outgoing_ray(&self, current_pixel: UVec2, image_dimensions: UVec2) -> Ray {
-        let rand_x: f32 = random();
-        let rand_y: f32 = random();
+        let rand_x: f32 = random::<f32>() * 0.5 - 0.25;
+        let rand_y: f32 = random::<f32>() * 0.5 - 0.25;
 
         // Convert pixel indices + random offset into [0..1] normalized coordinates
         let image_prop = Vec2::new(

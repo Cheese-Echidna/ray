@@ -32,7 +32,7 @@ impl Clear {
     };
     pub(crate) const AIR_BUBBLE: Self = Self {
         colour: Vec3::new(1.0, 1.0, 1.0),
-        refractive_index: 1.00 / 1.33,
+        refractive_index: 1.00 / 1.3333,
         roughness: 0.0,
     };
 }

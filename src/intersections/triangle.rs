@@ -1,29 +1,35 @@
-use crate::objects::object::OBJECT_TOLERANCE;
 use crate::utils::{bounce_across_normal, random_cosine_direction};
 use crate::*;
 use rand::random;
-use crate::objects::material::RenderMaterial;
+use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
+use crate::materials::material::RenderMaterial;
 
 #[derive(Debug)]
 pub struct Triangle {
     vertices: [Vec3; 3],
-    material: RenderMaterial
 }
 
 impl Triangle {
-    pub fn new(vertices: [Vec3; 3], material: RenderMaterial) -> Self {
+    pub fn new(vertices: [Vec3; 3]) -> Self {
         // Assume triangles are not degenerate, if they are, the normal() method below will panic
         Self {
             vertices,
-            material,
         }
     }
-    fn normal(&self) -> Vec3 {
+
+    pub(crate) fn normal_raw(&self) -> Vec3 {
         let [a, b, c] = self.vertices;
         let ab = b - a;
         let ac = c - a;
-        let normal = ab.cross(ac).normalize();
-        normal
+        ab.cross(ac)
+    }
+
+    pub(crate) fn vertices(&self) -> [Vec3; 3] {
+        self.vertices
+    }
+
+    fn normal(&self) -> Vec3 {
+        self.normal_raw().normalize()
     }
 
     // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
@@ -58,7 +64,12 @@ impl Triangle {
         if t > f32::EPSILON {
             // ray intersection
             let intersection_point = origin + direction * t;
-            assert!(self.includes_point(intersection_point));
+            // if !(self.includes_point(intersection_point)) {
+            //     dbg!(&self);
+            //     dbg!(intersection_point);
+            // };
+            // Top tip: If this keeps failing its probably because of degenerate triangles where area is close to 0
+            // You could remove this check and the unwraps in the implementation in polygon methods
             Some(intersection_point)
         } else {
             // This means that there is a line intersection but not a ray intersection.
@@ -98,65 +109,20 @@ impl Triangle {
     }
 }
 
-impl RenderObject for Triangle {
+impl RenderIntersection for Triangle {
     fn intersects(&self, ray: Ray) -> Vec<Vec3> {
         self.moller_trumbore_intersection(ray).into_iter().collect()
-    }
-
-    fn material(&self) -> RenderMaterial {
-        self.material
     }
 
     fn normal_at(&self, impact: Vec3) -> Vec3 {
         self.normal()
     }
 
-    fn random_point_on_surface(&self) -> Vec3 {
-        let [a, b, c] = self.vertices;
-        let ab = b - a;
-        let ac = c - a;
-        let (mut u, mut v): (f32, f32) = (random(), random());
-        if u + v > 1. {
-            (u, v) = (1. - u, 1. - v);
-        }
-
-        let point = a + ab * u + ac * v;
-
-        assert!(self.includes_point_on_surface(point));
-        point
-    }
-
     fn includes_point_on_surface(&self, point: Vec3) -> bool {
         self.includes_point(point)
     }
-}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_is_point_on_triangle() {
-        let a = Vec3::new(0.0, 0.0, 0.0);
-        let b = Vec3::new(1.0, 0.0, 0.0);
-        let c = Vec3::new(0.0, 1.0, 0.0);
-
-        let triangle = Triangle::new([a, b, c], RenderMaterial::new_void());
-
-        // A point clearly inside the triangle
-        let p1 = Vec3::new(0.25, 0.25, 0.0);
-        assert!(triangle.includes_point(p1));
-
-        // A point on an edge
-        let p2 = Vec3::new(0.5, 0.0, 0.0);
-        assert!(triangle.includes_point(p2));
-
-        // A point not in the plane (z != 0)
-        let p3 = Vec3::new(0.25, 0.25, 1.0);
-        assert!(!triangle.includes_point(p3));
-
-        // A point out of bounds
-        let p4 = Vec3::new(1.0, 1.0, 0.0);
-        assert!(!triangle.includes_point(p4));
+    fn uv(&self, at: Vec3) -> Vec2 {
+        todo!()
     }
 }

@@ -1572,6 +1572,7 @@ dependencies = [
  "pixels",
  "rand",
  "rayon",
+ "tinystl",
  "winit",
 ]
 
@@ -1888,6 +1889,12 @@ dependencies = [
  "bytemuck",
  "strict-num",
 ]
+
+[[package]]
+name = "tinystl"
+version = "0.0.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fdbcdda2f86a57b89b5d9ac17cd4c9f3917ec8edcde403badf3d992d2947af2a"
 
 [[package]]
 name = "toml"

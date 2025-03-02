@@ -14,6 +14,7 @@ pub fn render2(scene: Scene) -> ImageResult<()> {
         .flat_map(|px| (0..height).map(move |py| UVec2::new(px, py)))
         .collect::<Vec<_>>()
         .into_par_iter()
+        // .into_iter()
         .map(|pos| {
             let (r, g, b) = {
                 let colour = scene.trace_from_image_prop(pos, image_dimensions);
