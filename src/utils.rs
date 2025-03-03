@@ -131,6 +131,30 @@ impl ColourChange for palette::rgb::Rgb<palette::encoding::Srgb, u8> {
     }
 }
 
+impl ColourChange for palette::rgb::Rgb<palette::encoding::Srgb, f32> {
+    fn to_vec3(self) -> Vec3 {
+        let x = <palette::rgb::Rgb<palette::encoding::Srgb, f32> as Into<LinSrgb<f32>>>::into(self);
+        x.to_vec3()
+    }
+
+    fn from_vec3(x: Vec3) -> Self {
+        let x = LinSrgb::from_vec3(x);
+        let y: palette::Srgb<f32> = x.into_encoding();
+        y
+    }
+}
+
+impl ColourChange for image::Rgb<f32> {
+    fn to_vec3(self) -> Vec3 {
+        palette::Srgb::<f32>::from(self.0).to_vec3()
+    }
+
+    fn from_vec3(x: Vec3) -> Self {
+        let (a, b, c) = palette::Srgb::<f32>::from_vec3(x).into_components();
+        image::Rgb([a, b, c])
+    }
+}
+
 pub fn random_point_on_unit_sphere() -> Vec3 {
     let u: f32 = random();
     let v: f32 = random();

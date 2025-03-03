@@ -88,7 +88,8 @@ impl RenderIntersection for Polygon {
         self.triangles
             .iter()
             .find(|triangle| triangle.includes_point(impact))
-            .unwrap()
+            // TODO: FIX vvvvv - Seriously problematic
+            .unwrap_or(&self.triangles[0])
             .normal_at(impact)
     }
 

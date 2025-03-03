@@ -3,7 +3,7 @@ use crate::materials::material::RenderMaterial;
 use crate::{Ray, Vec3Colour};
 use crate::utils::{bounce_across_normal, random_point_on_unit_sphere};
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) struct Metal {
     base_colour: Vec3Colour,
     roughness: f32

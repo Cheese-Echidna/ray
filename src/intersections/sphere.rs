@@ -1,3 +1,4 @@
+use std::f32::consts::{PI, TAU};
 use crate::intersections::intersection::{RenderIntersection, OBJECT_TOLERANCE};
 use crate::*;
 
@@ -52,7 +53,10 @@ impl RenderIntersection for Sphere {
         (self.centre.distance(point) - self.radius).abs() <= OBJECT_TOLERANCE
     }
 
-    fn uv(&self, _at: Vec3) -> Vec2 {
-        todo!()
+    fn uv(&self, at: Vec3) -> Vec2 {
+        let [x, y, z] = ((at - self.centre) / self.radius).to_array();
+        let phi = f32::atan2(y, x) + PI;
+        let theta = f32::acos(z);
+        Vec2::new(phi / TAU, theta / PI)
     }
 }
