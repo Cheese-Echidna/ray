@@ -11,6 +11,7 @@ pub struct Hit {
     pub normal: Vec3,
     pub original_normal: Vec3,
     pub uv: Vec2,
+    pub uv_derivatives: (Vec3, Vec3),
 }
 
 impl Hit {
@@ -24,6 +25,7 @@ impl Hit {
             normal: utils::fix_normal(normal, ray.direction()).normalize(),
             original_normal: normal,
             uv,
+            uv_derivatives: object.intersector.uv_derivatives(uv),
         }
     }
     pub fn on_outside(&self) -> bool {

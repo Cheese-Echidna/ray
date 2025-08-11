@@ -59,4 +59,13 @@ impl RenderIntersection for Sphere {
         let theta = f32::acos(z);
         Vec2::new(phi / TAU, theta / PI)
     }
+
+    fn uv_derivatives(&self, uv: Vec2) -> (Vec3, Vec3) {
+        let r = self.radius;
+        let [u, v] = uv.to_array();
+        let du = Vec3::new(-r * u.sin() * v.sin(), r * u.cos() * v.sin(), 0.0);
+        let dv = Vec3::new( r * u.cos() * v.cos(), r * u.sin() * v.cos(), -r * v.sin());
+
+        (du, dv)
+    }
 }

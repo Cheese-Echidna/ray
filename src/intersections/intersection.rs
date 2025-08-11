@@ -11,5 +11,10 @@ pub trait RenderIntersection: Debug + Sync {
     fn normal_at(&self, impact: Vec3) -> Vec3;
     fn includes_point_on_surface(&self, point: Vec3) -> bool;
     fn uv(&self, at: Vec3) -> Vec2;
+
+    /// Should return the right and up vectors for the uv map of the object
+    /// t, b, normal are all perpendicular
+    /// returns (right, up)
+    fn uv_derivatives(&self, uv: Vec2) -> (Vec3, Vec3);
 }
 

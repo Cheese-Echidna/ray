@@ -44,4 +44,8 @@ impl RenderIntersection for AcceleratedPolygon {
     fn uv(&self, at: Vec3) -> Vec2 {
         todo!()
     }
+
+    fn uv_derivatives(&self, uv: Vec2) -> (Vec3, Vec3) {
+        todo!()
+    }
 }

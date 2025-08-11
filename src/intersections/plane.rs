@@ -58,4 +58,8 @@ impl RenderIntersection for Plane {
             scalar_projection(from_center, y),
         )
     }
+
+    fn uv_derivatives(&self, uv: Vec2) -> (Vec3, Vec3) {
+        todo!()
+    }
 }
